@@ -1,0 +1,44 @@
+{
+  "plugins": [
+    ["transform-object-rest-spread"],
+    ["transform-class-properties"],
+  ],
+  "presets": [
+    "es2015",
+    "react",
+  ],
+  "env": {
+    "production": {
+      "plugins": [
+        ["jsx-pragmatic", {
+          module: "react",
+          import: "React",
+        }],
+      ],
+      "presets": [
+        ["es2015", {"modules": false}],
+        "react",
+      ],
+    },
+    "development": {
+      "plugins": [
+        ["jsx-pragmatic", {
+          module: "react",
+          import: "React",
+        }],
+      ],
+      "presets": [
+        ["es2015", {"modules": false}],
+        "react",
+      ],
+    },
+    "test": {
+      "plugins": [
+        ["jsx-pragmatic", {
+          module: "react",
+          import: "React",
+        }],
+      ],
+    },
+  },
+}

@@ -1,0 +1,7 @@
+exports[`App successfully rendered 1`] = `
+<div
+  className="app-page"
+  onClick={undefined}>
+  It works
+</div>
+`;

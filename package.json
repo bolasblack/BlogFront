@@ -1,0 +1,66 @@
+{
+  "name": "BlogFront",
+  "version": "0.0.1",
+  "description": "My GitHub blog front",
+  "main": "",
+  "scripts": {
+    "_publish_history": "git checkout master && rm -rf ./* && git checkout history -- . && git add -A && git commit --amend --no-edit",
+    "test": "jest",
+    "start": "gulp"
+  },
+  "keywords": [
+    "monit"
+  ],
+  "author": "c4605 <bolasblack@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "immutable": "^3.8.1",
+    "ramda": "^0.22.1",
+    "react": "^15.4.1",
+    "react-dom": "^15.4.1",
+    "react-redux": "^4.4.6",
+    "redux": "^3.6.0",
+    "redux-saga": "^0.13.0"
+  },
+  "devDependencies": {
+    "babel-loader": "^6.2.8",
+    "babel-plugin-jsx-pragmatic": "^1.0.2",
+    "babel-plugin-transform-class-properties": "^6.19.0",
+    "babel-plugin-transform-object-rest-spread": "^6.19.0",
+    "babel-preset-es2015": "^6.18.0",
+    "babel-preset-react": "^6.16.0",
+    "css-loader": "^0.26.0",
+    "enzyme": "^2.6.0",
+    "gulp": "github:gulpjs/gulp#4.0",
+    "gulp-plumber": "^1.1.0",
+    "gulp-sass": "^2.3.2",
+    "gulp-util": "^3.0.7",
+    "jest": "^17.0.3",
+    "lodash": "^4.17.2",
+    "node-sass": "^3.13.0",
+    "react-addons-test-utils": "^15.4.1",
+    "react-hot-loader": "3.0.0-beta.6",
+    "react-test-renderer": "^15.4.1",
+    "sass-loader": "^4.0.2",
+    "style-loader": "^0.13.1",
+    "webpack": "2.1.0-beta.27",
+    "webpack-dev-server": "2.1.0-beta.12"
+  },
+  "jest": {
+    "transform": {
+      ".*": "<rootDir>/jest-preprocessor.js"
+    },
+    "testRegex": "(/__tests__/.*)\\.(js|jsx)$",
+    "moduleFileExtensions": [
+      "js",
+      "jsx",
+      "json",
+      "node",
+      "sass"
+    ],
+    "testPathDirs": [
+      "<rootDir>/scripts"
+    ],
+    "verbose": true
+  }
+}
