@@ -11,6 +11,9 @@ const processBabelConfig = (configPath) => {
 
 let config = {
   context: sysPath.resolve('.'),
+  node: {
+    __filename: true,
+  },
   entry: [
     './scripts/index.jsx',
   ],

@@ -2,9 +2,12 @@
   "plugins": [
     ["transform-object-rest-spread"],
     ["transform-class-properties"],
+    ["transform-runtime", {
+      "polyfill": false,
+      "regenerator": true,
+    }],
   ],
   "presets": [
-    "es2015",
     "react",
   ],
   "env": {
@@ -17,7 +20,6 @@
       ],
       "presets": [
         ["es2015", {"modules": false}],
-        "react",
       ],
     },
     "development": {
@@ -29,7 +31,6 @@
       ],
       "presets": [
         ["es2015", {"modules": false}],
-        "react",
       ],
     },
     "test": {
@@ -38,6 +39,9 @@
           module: "react",
           import: "React",
         }],
+      ],
+      "presets": [
+        ["es2015"],
       ],
     },
   },

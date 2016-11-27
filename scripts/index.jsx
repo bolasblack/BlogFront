@@ -1,10 +1,18 @@
+import Immutable from 'immutable'
 import ReactDOM from 'react-dom'
 import { AppContainer } from 'react-hot-loader'
-import App from './app'
+import { Provider } from 'react-redux'
+
+import App from './containers/app'
+import createStore from './utils/create_store'
+
+const store = createStore(Immutable.fromJS({}))
 
 ReactDOM.render(
   <AppContainer>
-    <App />
+    <Provider store={store}>
+      <App />
+    </Provider>
   </AppContainer>,
   document.getElementById('app')
 )
@@ -12,10 +20,12 @@ ReactDOM.render(
 if (module.hot) {
   __webpack_public_path__ = '/scripts/'
   module.hot.accept(() => {
-    const NextApp = require('./app').default
+    const NextApp = require('./containers/app').default
     ReactDOM.render(
       <AppContainer>
-        <NextApp/>
+        <Provider store={store}>
+          <NextApp/>
+        </Provider>
       </AppContainer>,
       document.getElementById('app')
     )
