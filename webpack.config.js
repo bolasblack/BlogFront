@@ -2,12 +2,8 @@ const _ = require('lodash')
 const fs = require('fs')
 const sysPath = require('path')
 const webpack = require('webpack')
-
-const processBabelConfig = (configPath) => {
-  const babelConfig = JSON.parse(fs.readFileSync(configPath))
-  babelConfig.presets.push(['es2015', {modules: false}])
-  return babelConfig
-}
+const sassImporter = require('./utils/sass_importer')
+const babelConfig = require('./.babelrc')
 
 let config = {
   context: sysPath.resolve('.'),
@@ -18,7 +14,7 @@ let config = {
     './scripts/index.jsx',
   ],
   resolve: {
-    extensions: ['.js', '.jsx', '.json'],
+    extensions: ['.js', '.jsx', '.json', '.sass'],
     modules: [
       sysPath.resolve(__dirname, '.'),
       'node_modules',
@@ -30,7 +26,17 @@ let config = {
       use: ['json'],
     }, {
       test: /\.sass$/,
-      use: 'style!css!sass?indentedSyntax'
+      use: [
+        'style-loader',
+        'css-loader',
+        {
+          loader: 'sass-loader',
+          options: {
+            indentedSyntax: true,
+            importer: sassImporter,
+          },
+        },
+      ]
     }, {
       test: /\.jsx?$/,
       exclude: /node_modules/,
@@ -38,6 +44,7 @@ let config = {
         'react-hot-loader/webpack',
         {
           loader: "babel-loader",
+          options: babelConfig,
         },
       ],
     }],

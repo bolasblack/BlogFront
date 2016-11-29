@@ -27,7 +27,7 @@ export default (initialState) => {
     ),
   )
 
-  sagaMiddleware.run(appSaga)
+  sagaMiddleware.run(appSaga(() => store.getState()))
 
   if (module.hot) {
     module.hot.accept('../actions', () => {

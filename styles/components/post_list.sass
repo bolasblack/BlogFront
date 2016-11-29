@@ -1,0 +1,27 @@
+@import '../utils'
+
+.post-list
+  width: 100%
+  border-collapse: collapse
+
+  tr
+    border-bottom: 1px solid #ddd
+
+    &:hover
+      cursor: pointer
+      background: #f9f9f9
+
+    &:last-child
+      border-bottom: none
+
+  td
+    padding: 12px 8px
+
+  .create-date
+    text-align: right
+    white-space: nowrap
+    font-family: monospace
+
+    &::before
+      content: "@"
+      margin-right: 8px

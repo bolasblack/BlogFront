@@ -18,4 +18,16 @@ export default {
   adjustObj: R.curry((updater, propName, obj) => {
     return R.assoc(propName, updater(R.prop(propName, obj)), obj)
   }),
+
+  // (a -> String) -> [a] -> [a]
+  sortByDate: R.curry((getter, data) => {
+    const sortBy = typeof data.sortBy === 'function' ? fn => data.sortBy(fn) : R.sortBy(R.__, data)
+    return sortBy(
+      R.compose(
+        Number,
+        R.replace(/-/g, ''),
+        getter,
+      )
+    )
+  }),
 }

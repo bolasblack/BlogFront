@@ -17,19 +17,16 @@ export const filterValidFiles = R.filter(
   ]),
 )
 
-export const sortByCreateDate = R.compose(
-  R.reverse,
-  R.sortBy(
-    R.compose(
-      Number,
-      R.replace(/-/g, ''),
-      R.prop('createDate')
-    )
-  )
+export const toPathIndexedObj = R.compose(
+  R.apply(R.zipObj),
+  R.juxt([
+    R.map(R.prop('path')),
+    R.identity,
+  ]),
 )
 
 export default R.compose(
-  sortByCreateDate,
+  toPathIndexedObj,
   R.map(parseContent),
   filterValidFiles,
 )

@@ -10,6 +10,8 @@ const colors = require('colors/safe')
 const webpackConfig = require('./webpack.config')
 const webpackCompiler = webpack(webpackConfig)
 
+const sassImporter = require('./utils/sass_importer')
+
 gulp.task('assets', () => {
   return gulp.src('assets/**/*')
              .pipe(gulp.dest('public'))
@@ -17,7 +19,7 @@ gulp.task('assets', () => {
 
 gulp.task('styles', () => {
   return gulp.src('styles/vendor.sass')
-             .pipe(gulp_sass())
+             .pipe(gulp_sass({importer: sassImporter}))
              .pipe(gulp.dest('public/styles'))
 })
 

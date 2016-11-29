@@ -12,13 +12,16 @@ const parseFilename = R.compose(
 const parseRawContent = passInContent => {
   if (passInContent.content == null) { return {} }
 
-  let rawContent
+  let content
   if (passInContent.encoding === 'base64') {
-    rawContent = b64DecodeUnicode(passInContent.content)
+    content = b64DecodeUnicode(passInContent.content)
   } else {
-    rawContent = passInContent.content
+    content = passInContent.content
   }
-  return {content: rawContent}
+  return {
+    encoding: passInContent.encoding,
+    content: content,
+  }
 }
 
 export default content => {

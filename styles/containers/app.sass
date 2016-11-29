@@ -1,0 +1,34 @@
+
+/* body
+/*   background: #222 url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAGklEQVQIW2NkYGD4D8SMQAwGcAY2AbBKDBUAVuYCBQPd34sAAAAASUVORK5CYII=)
+
+@import '../utils'
+
+.main-app
+  @extend %container
+  padding: 50px 0
+
+  .social-links
+    @extend %list-unstyled
+    @extend %list-inline
+    margin: 40px 0 0 0
+    text-align: center
+
+    > li
+      padding: 0 20px
+
+    a
+      color: #777
+
+      &:hover
+        color: #333
+
+.article-list
+  margin-top: 30px
+
+  time
+    margin-left: 10px
+
+  .create-time
+    padding-left: 20px
+    text-align: right

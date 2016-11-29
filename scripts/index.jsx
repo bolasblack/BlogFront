@@ -2,6 +2,7 @@ import Immutable from 'immutable'
 import ReactDOM from 'react-dom'
 import { AppContainer } from 'react-hot-loader'
 import { Provider } from 'react-redux'
+import Modal from 'react-modal'
 
 import App from './containers/app'
 import createStore from './utils/create_store'

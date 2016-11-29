@@ -5,13 +5,13 @@ const getComponentName = (Component) => {
   return Component.displayName || Component.name || 'Component'
 }
 
-export default (mapStateToProps, mapDispatchToProps, mergeProps, options) => {
+export default (mapStateToProps, mapFnToProps, mergeProps, options) => {
   return (Component) => {
-    const WrappedComponent = reduxConnect(mapStateToProps, mapDispatchToProps, mergeProps, options)(Component)
+    const WrappedComponent = reduxConnect(mapStateToProps, mapFnToProps, mergeProps, options)(Component)
     utils.extend(WrappedComponent, {
       [getComponentName(Component)]: Component,
       mapStateToProps,
-      mapDispatchToProps,
+      mapFnToProps,
       mergeProps,
       options,
     })
