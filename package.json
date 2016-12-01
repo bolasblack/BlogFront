@@ -17,6 +17,7 @@
     "bootstrap-sass": "^3.3.7",
     "github-api": "^2.3.0",
     "immutable": "^3.8.1",
+    "js-yaml": "^3.7.0",
     "normalize.css": "^5.0.0",
     "ramda": "^0.22.1",
     "react": "^15.4.1",
@@ -26,6 +27,7 @@
     "redux": "^3.6.0",
     "redux-saga": "^0.13.0",
     "regenerator": "^0.8.46",
+    "sanctuary": "^0.11.1",
     "spin.js": "^2.3.2"
   },
   "devDependencies": {

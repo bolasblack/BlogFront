@@ -1,7 +1,7 @@
 import R from 'ramda'
 import path from 'path'
 import utils from '../utils'
-import parseContent from './parse_github_file_content'
+import parseFile from './parse_github_file'
 
 export const filterValidFiles = R.filter(
   R.allPass([
@@ -27,6 +27,6 @@ export const toPathIndexedObj = R.compose(
 
 export default R.compose(
   toPathIndexedObj,
-  R.map(parseContent),
+  R.map(parseFile),
   filterValidFiles,
 )

@@ -3,9 +3,9 @@ import {
   filterValidFiles,
   sortByCreateDate,
   toPathIndexedObj,
-} from '../parse_github_file_contents'
+} from '../parse_github_files'
 
-describe('utils/parse_github_file_contents', () => {
+describe('utils/parse_github_files', () => {
   describe('.filterValidFiles', () => {
     it('works', () => {
       const validFiles = filterValidFiles([

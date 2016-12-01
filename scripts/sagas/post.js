@@ -7,8 +7,8 @@ import {
 } from '../actions/post'
 
 import { repo } from './github'
-import parseGitHubFileContents from '../utils/parse_github_file_contents'
-import parseGitHubFileContent from '../utils/parse_github_file_content'
+import parseGitHubFiles from '../utils/parse_github_files'
+import parseGitHubFile from '../utils/parse_github_file'
 
 export default saga
 
@@ -19,7 +19,7 @@ function* saga(getState) {
 
 function* fetchPosts(getState, action) {
   const resp = yield call([repo, repo.getContents], 'master')
-  yield put(actionCreators.requestListSucceed(parseGitHubFileContents(resp.data)))
+  yield put(actionCreators.requestListSucceed(parseGitHubFiles(resp.data)))
 }
 
 function* fetchPost(getState, action) {
@@ -30,7 +30,7 @@ function* fetchPost(getState, action) {
       const resp = yield call([repo, repo.getContents], 'master', action.payload.path)
       yield put(actionCreators.requestItemSucceed({
         path: action.payload.path,
-        data: parseGitHubFileContent(resp.data),
+        data: parseGitHubFile(resp.data),
       }))
     }
     yield put(actionCreators.show({path: action.payload.path}))
