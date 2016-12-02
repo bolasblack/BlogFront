@@ -5,21 +5,20 @@ import '../../styles/components/post_list'
 
 const PostList = ({
   posts,
-  onClickPost,
+  postLinkCreator,
 }) => {
   return (
     <table className="post-list">
       <tbody>
-        {posts.toArray().map((post) => {
-           return (
-             <tr
-               onClick={() => onClickPost(post)}
-               key={post.get('title')}
-             >
-               <td className="title">{post.get('title')}</td>
-               <td className="create-date">{post.get('createDate')}</td>
-             </tr>
-           )
+        {posts.toArray().map(post => {
+           return postLinkCreator(post, ({ onClick }) => {
+             return (
+               <tr onClick={onClick} key={post.get('title')}>
+                 <td className="title">{post.get('title')}</td>
+                 <td className="create-date">{post.get('createDate')}</td>
+               </tr>
+             )
+           })
          })}
       </tbody>
     </table>

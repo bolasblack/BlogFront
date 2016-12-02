@@ -1,7 +1,9 @@
+import R from 'ramda'
 import Immutable from 'immutable'
 import connect from '../utils/connect'
 import RI from '../utils/r_immu'
 import utils from '../utils'
+import { HashRouter as Router, Match, Link } from 'react-router'
 
 import { actionCreators as postActionCreators } from '../actions/post'
 import PostList from '../components/post_list'
@@ -11,9 +13,38 @@ import Modal from '../components/modal'
 
 import '../../styles/containers/app'
 
+const postLinkCreator = (post, children) => {
+  return (
+    <Link key={post.get('path')} to={`/posts/${post.get('path')}`}>
+      {(linkHelper) => children(linkHelper)}
+    </Link>
+  )
+}
+
+const mapRouterToDispatcher = (fn) => {
+  const memo = {lastPathname: null, result: null}
+  return R.curry((dispatchers, matchInfo) => {
+    if (memo.lastPathname !== matchInfo.location.pathname) {
+      memo.lastPathname = matchInfo.location.pathname
+      if (matchInfo.matched) {
+        memo.result = fn(dispatchers, matchInfo)
+      }
+    }
+    return memo.result
+  })
+}
+const rootRouterMapper = mapRouterToDispatcher(({ onDisappearPostModal }, matchInfo) => {
+  setTimeout(() => onDisappearPostModal(), 0)
+  return null
+})
+const postRouterMapper = mapRouterToDispatcher(({ onNeedShowPost }, matchInfo) => {
+  setTimeout(() => onNeedShowPost(matchInfo.params.path), 0)
+  return null
+})
+
 const App = ({
   posts,
-  onClickPost,
+  onNeedShowPost,
   onDisappearPostModal,
   onDisappearCurrentPost,
   requestingPost,
@@ -21,22 +52,25 @@ const App = ({
   displayingPost,
 }) => {
   return (
-    <div className="app-content">
-      <Spinner enabled={requestingPost}>
-        <PostList posts={posts}
-          onClickPost={onClickPost}
-        />
-      </Spinner>
+    <Router>{({ router }) => (
+      <div className="app-content">
+        <Spinner enabled={requestingPost}>
+          <PostList posts={posts} postLinkCreator={postLinkCreator} />
+        </Spinner>
 
-      <ul className="social-links">
-        <li><a target="_blank" href="https://twitter.com/c4605">@c4605</a></li>
-        <li><a target="_blank" href="https://github.com/bolasblack/BlogFront">Fork me</a></li>
-      </ul>
+        <ul className="social-links">
+          <li><a target="_blank" href="https://twitter.com/c4605">@c4605</a></li>
+          <li><a target="_blank" href="https://github.com/bolasblack/BlogFront">Fork me</a></li>
+        </ul>
 
-      <Modal isOpen={displayingPostModal} onRequestClose={onDisappearPostModal} onAfterClose={onDisappearCurrentPost}>
-        {displayingPost ? (<Post metadata={displayingPost.get('meta')} title={displayingPost.get('title')} content={displayingPost.get('content')} />) : null}
-      </Modal>
-    </div>
+        <Match pattern="/posts/:path" children={postRouterMapper({onNeedShowPost})} />
+        <Match pattern="/" exactly children={rootRouterMapper({onDisappearPostModal})} />
+
+        <Modal isOpen={displayingPostModal} onRequestClose={() => router.transitionTo('/')} onAfterClose={onDisappearCurrentPost}>
+          {displayingPost ? (<Post metadata={displayingPost.get('meta')} title={displayingPost.get('title')} content={displayingPost.get('content')} />) : null}
+        </Modal>
+      </div>
+    )}</Router>
   )
 }
 
@@ -52,8 +86,8 @@ const mapStateToProps = (state) => {
 
 const mapFnToProps = (dispatch) => {
   return {
-    onClickPost(post) {
-      dispatch(postActionCreators.requestItem({path: post.get('path')}))
+    onNeedShowPost(postPath) {
+      dispatch(postActionCreators.requestItem({path: postPath}))
     },
     onDisappearPostModal() {
       dispatch(postActionCreators.hideModal())

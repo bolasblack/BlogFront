@@ -19,6 +19,10 @@ const actionTypes = [
    */
   'request_item',
 
+  'request_item_start',
+
+  'request_item_end',
+
   /**
    * payload: {
    *   path: '...',
@@ -61,19 +65,13 @@ export const reducer = (state, action) => {
 
   switch (action.type) {
     case Types.requestListSucceed:
-      return state.setIn(['posts'], Immutable.fromJS(action.payload))
-    case Types.requestListFailed:
-      break
-    case Types.requestItem:
+      return state.mergeDeepIn(['posts'], action.payload)
+    case Types.requestItemStart:
       return state.setIn(['requestingPosts'], true)
-    case Types.requestItemSucceed: {
-      const post = state.getIn(['posts', action.payload.path])
-      return state
-        .deleteIn(['requestingPosts'])
-        .setIn(['posts', action.payload.path], post.merge(action.payload.data))
-    }
-    case Types.requestItemFailed:
+    case Types.requestItemEnd:
       return state.deleteIn(['requestingPosts'])
+    case Types.requestItemSucceed:
+      return state.mergeDeepIn(['posts', action.payload.path], action.payload.data)
     case Types.show:
       return hideShowing(state)
         .setIn(['showingPostModal'], true)

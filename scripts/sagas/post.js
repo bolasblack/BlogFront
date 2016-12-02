@@ -25,19 +25,19 @@ function* fetchPosts(getState, action) {
 function* fetchPost(getState, action) {
   const state = getState()
   const post = state.getIn(['posts', action.payload.path])
-  if (post) {
-    if (post.get('content') == null) {
-      const resp = yield call([repo, repo.getContents], 'master', action.payload.path)
-      yield put(actionCreators.requestItemSucceed({
-        path: action.payload.path,
-        data: parseGitHubFile(resp.data),
-      }))
-    } else {
-      yield put(actionCreators.requestItemSucceed({
-        path: action.payload.path,
-        data: post.toJS(),
-      }))
-    }
-    yield put(actionCreators.show({path: action.payload.path}))
+  if (post && post.get('content') != null) {
+    yield put(actionCreators.requestItemSucceed({
+      path: action.payload.path,
+      data: post.toJS(),
+    }))
+  } else {
+    yield put(actionCreators.requestItemStart())
+    const resp = yield call([repo, repo.getContents], 'master', action.payload.path)
+    yield put(actionCreators.requestItemEnd())
+    yield put(actionCreators.requestItemSucceed({
+      path: action.payload.path,
+      data: parseGitHubFile(resp.data),
+    }))
   }
+  yield put(actionCreators.show({path: action.payload.path}))
 }
