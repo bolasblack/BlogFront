@@ -32,6 +32,11 @@ function* fetchPost(getState, action) {
         path: action.payload.path,
         data: parseGitHubFile(resp.data),
       }))
+    } else {
+      yield put(actionCreators.requestItemSucceed({
+        path: action.payload.path,
+        data: post.toJS(),
+      }))
     }
     yield put(actionCreators.show({path: action.payload.path}))
   }

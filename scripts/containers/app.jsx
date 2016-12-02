@@ -1,24 +1,27 @@
 import Immutable from 'immutable'
-import Modal from 'react-modal'
 import connect from '../utils/connect'
 import RI from '../utils/r_immu'
 import utils from '../utils'
 
 import { actionCreators as postActionCreators } from '../actions/post'
 import PostList from '../components/post_list'
+import Post from '../components/post'
 import Spinner from '../components/spinner'
+import Modal from '../components/modal'
 
 import '../../styles/containers/app'
 
 const App = ({
   posts,
   onClickPost,
+  onDisappearPostModal,
   onDisappearCurrentPost,
   requestingPost,
+  displayingPostModal,
   displayingPost,
 }) => {
   return (
-    <div className="main-app">
+    <div className="app-content">
       <Spinner enabled={requestingPost}>
         <PostList posts={posts}
           onClickPost={onClickPost}
@@ -30,8 +33,8 @@ const App = ({
         <li><a target="_blank" href="https://github.com/bolasblack/BlogFront">Fork me</a></li>
       </ul>
 
-      <Modal isOpen={displayingPost != null} onRequestClose={onDisappearCurrentPost}>
-        {displayingPost ? (<div>{displayingPost.get('content')}</div>) : null}
+      <Modal isOpen={displayingPostModal} onRequestClose={onDisappearPostModal} onAfterClose={onDisappearCurrentPost}>
+        {displayingPost ? (<Post metadata={displayingPost.get('meta')} title={displayingPost.get('title')} content={displayingPost.get('content')} />) : null}
       </Modal>
     </div>
   )
@@ -42,6 +45,7 @@ const mapStateToProps = (state) => {
   return {
     posts: utils.sortByDate(RI.prop('createDate'), posts).reverse(),
     requestingPost: state.get('requestingPosts', false),
+    displayingPostModal: state.get('showingPostModal', false),
     displayingPost: posts.find(RI.propEq('showing', true)),
   }
 }
@@ -50,6 +54,9 @@ const mapFnToProps = (dispatch) => {
   return {
     onClickPost(post) {
       dispatch(postActionCreators.requestItem({path: post.get('path')}))
+    },
+    onDisappearPostModal() {
+      dispatch(postActionCreators.hideModal())
     },
     onDisappearCurrentPost() {
       dispatch(postActionCreators.hideShowing())

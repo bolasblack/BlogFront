@@ -36,6 +36,8 @@ const actionTypes = [
    */
   'show',
 
+  'hide_modal',
+
   'hide_showing',
 ]
 
@@ -72,9 +74,12 @@ export const reducer = (state, action) => {
     }
     case Types.requestItemFailed:
       return state.deleteIn(['requestingPosts'])
-    case Types.show: {
-      return hideShowing(state).setIn(['posts', action.payload.path, 'showing'], true)
-    }
+    case Types.show:
+      return hideShowing(state)
+        .setIn(['showingPostModal'], true)
+        .setIn(['posts', action.payload.path, 'showing'], true)
+    case Types.hideModal:
+      return state.setIn(['showingPostModal'], false)
     case Types.hideShowing:
       return hideShowing(state)
   }

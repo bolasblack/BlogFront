@@ -1,10 +1,12 @@
-
-/* body
-/*   background: #222 url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAGklEQVQIW2NkYGD4D8SMQAwGcAY2AbBKDBUAVuYCBQPd34sAAAAASUVORK5CYII=)
-
 @import '../utils'
 
-.main-app
+html, body
+  height: 100%
+
+.app-container
+  // transition: transform 0.08s ease-out
+
+.app-content
   @extend %container
   padding: 50px 0
 
@@ -23,12 +25,42 @@
       &:hover
         color: #333
 
-.article-list
-  margin-top: 30px
+.ReactModal__Overlay
+  overflow: scroll !important
+  transition: background-color 0.2s ease-out
+  background-color: rgba(#000000, 0) !important
 
-  time
-    margin-left: 10px
+  &.ReactModal__Overlay--after-open
+    background-color: rgba(#000000, 0.5) !important
 
-  .create-time
-    padding-left: 20px
-    text-align: right
+  &.ReactModal__Overlay--before-close
+    transition: background-color 0.5s ease-out
+    background-color: rgba(#000000, 0) !important
+
+.ReactModal__Content
+  position: static !important
+  margin: 40px auto
+  width: 50%
+  transition-delay: 0s
+  transition-duration: 0.2s
+  transition-property: transform opacity
+  transition-timing-function: ease-out
+  transform: translate(0,-25%)
+
+  &.ReactModal__Content--after-open
+    opacity: 1
+    transform: translate(0,0)
+
+  &.ReactModal__Content--before-close
+    opacity: 0
+    transform: translate(0,-100%)
+
+.ReactModal__Body--open
+  overflow: hidden
+  background: #222 url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAGklEQVQIW2NkYGD4D8SMQAwGcAY2AbBKDBUAVuYCBQPd34sAAAAASUVORK5CYII=)
+
+  .app-container
+    height: 100%
+    overflow: hidden
+    transform: scale(0.9)
+    background: #fff

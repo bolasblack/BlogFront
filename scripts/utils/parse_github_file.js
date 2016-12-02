@@ -2,7 +2,7 @@ import R from 'ramda'
 import S from './s'
 import path from 'path'
 import utils from '../utils'
-import jsyaml from 'js-yaml'
+import yaml from '../utils/yaml'
 
 // String -> S.Maybe {createDate: String, title: String}
 const parseFilename = R.compose(
@@ -35,7 +35,7 @@ export const parseRawContent = file => {
     R.map(R.trim),
     utils.compact,
     R.zipObj(['meta', 'content']),
-    utils.adjustObj(S.encaseEither(S.I, jsyaml.safeLoad), 'meta'),
+    utils.adjustObj(S.encaseEither(S.I, yaml.parse), 'meta'),
   )).chain(data =>
     data.meta.isLeft || !R.is(Object, data.meta.value) ?
                  S.Maybe.empty() :
