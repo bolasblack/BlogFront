@@ -52,7 +52,7 @@ export default () => {
         return memo.isLeft ? R.reduced(memo) : exec(cmd, null)
       }, S.Right(), [
         `rm -rf "${projectRoot}/public"`,
-        `cd ${projectRoot} && ${projectRoot}/node_modules/.bin/gulp build`,
+        `cd ${projectRoot} && NODE_ENV=production ${projectRoot}/node_modules/.bin/gulp build`,
         `cd "${repoPath}" && git checkout gh-pages`,
         `rm -rf "${repoPath}/"*`,
         `cp -r "${projectRoot}/public/"* "${repoPath}/"`,

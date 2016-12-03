@@ -57,6 +57,7 @@ let config = {
   /* devtool: 'source-map',*/
   plugins: [
     new webpack.NamedModulesPlugin(),
+    new webpack.EnvironmentPlugin(['NODE_ENV']),
   ],
 }
 
