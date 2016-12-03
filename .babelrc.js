@@ -1,5 +1,6 @@
 module.exports = {
   'plugins': [
+    ["transform-function-bind"],
     ['transform-object-rest-spread'],
     ['transform-class-properties'],
     ['jsx-pragmatic', {

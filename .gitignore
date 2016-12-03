@@ -12,6 +12,6 @@ npm-debug.log
 node_modules/*
 bower_components/*
 public
+publish_repo
 
 test/test-results.xml
-
