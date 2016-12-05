@@ -60,6 +60,7 @@ const App = ({
 
         <ul className="social-links">
           <li><a target="_blank" href="https://twitter.com/c4605">@c4605</a></li>
+          <li><a target="_blank" href="https://raw.githubusercontent.com/bolasblack/BlogPosts/master/_meta/feed.xml">RSS</a></li>
           <li><a target="_blank" href="https://github.com/bolasblack/BlogFront">Fork me</a></li>
         </ul>
 
