@@ -9,7 +9,7 @@ import { actionCreators as postActionCreators } from '../actions/post'
 import PostList from '../components/post_list'
 import Post from '../components/post'
 import Spinner from '../components/spinner'
-import Modal from '../components/modal'
+import Modal, { ModalOuterContent } from '../components/modal'
 
 import '../../styles/containers/app'
 
@@ -50,10 +50,11 @@ const App = ({
   requestingPost,
   displayingPostModal,
   displayingPost,
+  modalConnector,
 }) => {
   return (
     <Router>{({ router }) => (
-      <div className="app-content">
+      <ModalOuterContent connector={modalConnector} className="app-content">
         <Spinner enabled={requestingPost}>
           <PostList posts={posts} postLinkCreator={postLinkCreator} />
         </Spinner>
@@ -67,10 +68,10 @@ const App = ({
         <Match pattern="/posts/:path" children={postRouterMapper({onNeedShowPost})} />
         <Match pattern="/" exactly children={rootRouterMapper({onDisappearPostModal})} />
 
-        <Modal isOpen={displayingPostModal} onRequestClose={() => router.transitionTo('/')} onAfterClose={onDisappearCurrentPost}>
+        <Modal connector={modalConnector} isOpen={displayingPostModal} onRequestClose={() => router.transitionTo('/')} onAfterClose={onDisappearCurrentPost}>
           {displayingPost ? (<Post metadata={displayingPost.get('meta')} title={displayingPost.get('title')} content={displayingPost.get('content')} />) : null}
         </Modal>
-      </div>
+      </ModalOuterContent>
     )}</Router>
   )
 }
