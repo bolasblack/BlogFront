@@ -53,10 +53,10 @@ export default () => {
       }, S.Right(), [
         `rm -rf "${projectRoot}/public"`,
         `cd ${projectRoot} && NODE_ENV=production ${projectRoot}/node_modules/.bin/gulp build`,
-        `cd "${repoPath}" && git checkout gh-pages`,
+        `cd "${repoPath}" && git checkout master`,
         `rm -rf "${repoPath}/"*`,
         `cp -r "${projectRoot}/public/"* "${repoPath}/"`,
-        `cd "${repoPath}" && git add -A && git commit -m "${new Date().toJSON()}" && git push origin gh-pages`,
+        `cd "${repoPath}" && git add -A && git commit -m "${new Date().toJSON()}" && git push origin master`,
       ])
     })
 
