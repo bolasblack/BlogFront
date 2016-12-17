@@ -4,7 +4,7 @@ import path from 'path'
 import utils from '../utils'
 import yaml from '../utils/yaml'
 
-// String -> S.Maybe {createDate: String, title: String}
+// :: String -> S.Maybe {createDate: String, title: String}
 const parseFilename = R.compose(
   R.map(
     R.compose(
@@ -17,20 +17,11 @@ const parseFilename = R.compose(
   S.match(/(\d{4}-\d{2}-\d{2})-(.+)\.(?:md)/),
 )
 
-// {encoding: String, content: String} -> S.Maybe {meta: Object, content: String}
-export const parseRawContent = file => {
-  if (file.content == null) return S.Maybe.empty()
+// :: String -> S.Maybe {meta: Object, content: String}
+export const parseRawContent = content => {
+  if (content == null) return S.Maybe.empty()
 
-  const {content, encoding} = file
-
-  let decodedContent
-  if (encoding.toLowerCase() === 'base64') {
-    decodedContent = S.Maybe.of(b64DecodeUnicode(content))
-  } else {
-    decodedContent = S.Maybe.empty()
-  }
-
-  return decodedContent.map(R.pipe(
+  return S.Maybe.of(content).map(R.pipe(
     R.split(/^-+$/m),
     R.map(R.trim),
     utils.compact,
@@ -43,11 +34,18 @@ export const parseRawContent = file => {
   )
 }
 
-// {name: String, encoding: String, content: String, path: String, html_url: String} ->
+// :: {encoding: String, content: String} -> S.Maybe {meta: Object, content: String}
+const decodeAndParseContent = file => {
+  if (file.content == null) return S.Maybe.empty()
+  if (file.encoding.toLowerCase() !== 'base64') return S.Maybe.empty()
+  return parseRawContent(b64DecodeUnicode(file.content))
+}
+
+// :: {name: String, encoding: String, content: String, path: String, html_url: String} ->
 //   ?{title: String, createDate: String, meta: Object, content: String, path: String, html_url: String}
 export default file => {
   return parseFilename(file.name)
-    .map(R.merge(S.fromMaybe({}, parseRawContent(file))))
+    .map(R.merge(S.fromMaybe({}, decodeAndParseContent(file))))
     .map(R.merge(R.pick(['path', 'html_url'], file)))
     .value
 }

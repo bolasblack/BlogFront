@@ -52,8 +52,7 @@ title: test file.name
 ---
 hello world
     `
-      const content = {encoding: 'base64', content: b64EncodeUnicode(rawContent)}
-      expect(parseRawContent(content).value).toEqual({
+      expect(parseRawContent(rawContent).value).toEqual({
         meta: {title: 'test file.name'},
         content: 'hello world',
       })
@@ -65,8 +64,7 @@ hello world
 ---
 hello world
     `
-      const content = {encoding: 'base64', content: b64EncodeUnicode(rawContent)}
-      expect(parseRawContent(content).value).toBeUndefined()
+      expect(parseRawContent(rawContent).value).toBeUndefined()
     })
   })
 })
