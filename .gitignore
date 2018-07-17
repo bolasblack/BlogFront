@@ -1,0 +1,25 @@
+**/.DS_Store
+nbproject
+manifest.mf
+build.xml
+
+.project
+.settings
+.idea/*
+*.sw[a-z]
+
+# js
+*.log
+node_modules/*
+
+# clj
+.shadow-cljs
+.cpcache
+.nrepl-*
+
+# gulp
+.gulp-out
+
+public
+publish_repo
+test/test-results.xml

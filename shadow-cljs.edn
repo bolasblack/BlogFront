@@ -1,0 +1,5 @@
+{:deps true
+ :cache-root ".shadow-cljs"
+ :builds {:main {:target :npm-module
+                 :output-dir ".shadow-cljs/out"
+                 :compiler-options {:source-map true}}}}
