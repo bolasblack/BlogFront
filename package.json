@@ -12,7 +12,12 @@
   "keywords": [],
   "author": "c4605 <bolasblack@gmail.com>",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "create-react-class": "^15.6.3",
+    "react": "^16.4.1",
+    "react-dom": "^16.4.1",
+    "react-dom-server": "^0.0.5"
+  },
   "devDependencies": {
     "@types/copy-webpack-plugin": "^4.4.1",
     "@types/del": "^3.0.1",

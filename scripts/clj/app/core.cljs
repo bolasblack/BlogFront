@@ -1,3 +1,8 @@
-(ns app.core)
+(ns app.core
+  (:require [reagent.core :as r]
+            [app.utils :refer [dom-ready]]))
 
-(js/console.log "hello world")
+(defn it-works []
+  [:h1 "it works"])
+
+(dom-ready #(r/render [it-works] (js/document.getElementById "app")))
