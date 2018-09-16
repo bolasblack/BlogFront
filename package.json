@@ -4,14 +4,21 @@
   "description": "My GitHub blog front",
   "main": "",
   "scripts": {
-    "gulp": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json gulp",
-    "webpack-serve": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json webpack-serve -r ts-node/register ./configs/webpack.config.ts",
-    "start": "TMUX= tmux -f '' -S /tmp/BlogFront-tmux.sock new-session \\; split-window -h \\; select-pane -t %0 \\; split-window -v \\; select-pane -t %0 \\; send-keys C-m \\; send-keys 'yarn gulp' C-m \\; select-pane -t %2 \\; send-keys 'yarn webpack-serve' C-m \\; select-pane -t %1 \\; send-keys 'yarn shadow-cljs watch main' C-m"
+    "webpack-serve": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json yarn ts-node `yarn bin`/webpack-serve -r esm --config ./configs/webpack.config.ts",
+    "s": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json start",
+    "start": "TMUX= tmux -f '' -S /tmp/BlogFront-tmux.sock new-session \\; split-window -h \\; select-pane -t %0 \\; split-window -v \\; select-pane -t %0 \\; send-keys C-m \\; send-keys 'yarn s default' C-m \\; select-pane -t %2 \\; send-keys 'yarn webpack-serve' C-m \\; select-pane -t %1 \\; send-keys 'yarn shadow-cljs watch main' C-m"
   },
   "githubBlogRepo": "bolasblack/bolasblack.github.com",
   "keywords": [],
   "author": "c4605 <bolasblack@gmail.com>",
   "license": "MIT",
+  "start": {
+    "file": "./configs/start_tasks.ts",
+    "require": [
+      "ts-node/register"
+    ],
+    "reporter": "@start/reporter-verbose"
+  },
   "dependencies": {
     "create-react-class": "^15.6.3",
     "react": "^16.4.1",
@@ -19,23 +26,33 @@
     "react-dom-server": "^0.0.5"
   },
   "devDependencies": {
+    "@start/cli": "^0.2.0",
+    "@start/plugin-find": "^0.2.0",
+    "@start/plugin-read": "^0.2.0",
+    "@start/plugin-remove": "^0.2.1",
+    "@start/plugin-rename": "^0.2.1",
+    "@start/plugin-sequence": "^0.2.0",
+    "@start/plugin-watch": "^0.2.0",
+    "@start/plugin-write": "^0.2.0",
+    "@start/reporter-verbose": "^0.1.0",
     "@types/copy-webpack-plugin": "^4.4.1",
     "@types/del": "^3.0.1",
     "@types/gulp": "^4.0.5",
-    "@types/html-webpack-plugin": "^2.30.3",
+    "@types/html-webpack-plugin": "^3.2.0",
     "@types/node": "^10.5.2",
+    "@types/node-sass": "^3.10.32",
     "@types/webpack": "^4.4.6",
     "@types/webpack-serve": "^2.0.0",
     "copy-webpack-plugin": "^4.5.2",
     "del": "^3.0.0",
-    "gulp": "^4.0.0",
+    "esm": "^3.0.72",
     "gulp-plumber": "^1.1.0",
-    "gulp-sass": "^2.3.2",
     "html-webpack-include-assets-plugin": "^1.0.4",
     "html-webpack-plugin": "^3.2.0",
-    "shadow-cljs": "^2.4.20",
-    "ts-node": "^7.0.0",
-    "typescript": "^2.9.2",
+    "sass": "^1.13.4",
+    "shadow-cljs": "^2.6.8",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.0.3",
     "webpack": "^4.16.1",
     "webpack-command": "^0.4.1",
     "webpack-serve": "^2.0.2"

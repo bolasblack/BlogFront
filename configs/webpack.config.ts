@@ -5,6 +5,7 @@ import { Options as WebpackServeOptions } from 'webpack-serve'
 import CopyWebpackPlugin from 'copy-webpack-plugin'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import HtmlWebpackIncludeAssetsPlugin from 'html-webpack-include-assets-plugin'
+import { DEST as ASSETS_DEST } from './start_tasks'
 
 export const ENV = process.env.NODE_ENV || 'development'
 
@@ -40,7 +41,7 @@ export const config: Configuration = {
   },
   plugins: [
     new CopyWebpackPlugin([{
-      from: '.gulp-out',
+      from: ASSETS_DEST,
       to: '.',
     }]),
     new HtmlWebpackPlugin({
@@ -51,7 +52,7 @@ export const config: Configuration = {
       assets: [{
         path: '',
         glob: '*.css',
-        globPath: '.gulp-out'
+        globPath: ASSETS_DEST,
       }],
       hash: true,
       append: false,

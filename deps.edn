@@ -1,4 +1,4 @@
-{:paths ["scripts/clj"]
+{:paths ["cljs"]
  :deps
  {reagent {:mvn/version "0.8.1"
            :exclusions [cljsjs/react

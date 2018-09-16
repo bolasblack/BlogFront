@@ -17,9 +17,9 @@ node_modules/*
 .cpcache
 .nrepl-*
 
-# gulp
-.gulp-out
+.start-out
 
+dist
 public
 publish_repo
 test/test-results.xml

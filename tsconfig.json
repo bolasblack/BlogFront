@@ -15,7 +15,10 @@
     "strictPropertyInitialization": true,
     "removeComments": false,
   },
+  "include": [
+    "configs/**/*.ts",
+  ],
   "exclude": [
-    "node_modules/**\/*"
-  ]
+    "node_modules/**/*",
+  ],
 }
