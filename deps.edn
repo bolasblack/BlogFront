@@ -4,4 +4,6 @@
            :exclusions [cljsjs/react
                         cljsjs/react-dom
                         cljsjs/react-dom-server
-                        cljsjs/create-react-class]}}}
+                        cljsjs/create-react-class]}}
+ :aliases
+ {:nrepl {:extra-deps {cider/cider-nrepl {:mvn/version "0.18.0"}}}}}

@@ -1,4 +1,4 @@
-(ns app.utils)
+(ns browser.utils)
 
 (defn dom-ready [callback]
   ;; https://github.com/jquery/jquery/blob/master/src/core/ready.js

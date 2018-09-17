@@ -1,6 +1,6 @@
-(ns app.core
+(ns browser.core
   (:require [reagent.core :as r]
-            [app.utils :refer [dom-ready]]))
+            [browser.utils :refer [dom-ready]]))
 
 (defn it-works []
   [:h1 "it works"])
