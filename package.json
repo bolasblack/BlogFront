@@ -5,7 +5,7 @@
   "main": "",
   "scripts": {
     "browser-sync": "browser-sync --files='dist/*.css' --files='dist/*.html' --no-open ./dist",
-    "webpack-serve": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json yarn ts-node `yarn bin`/webpack-serve -r esm --config ./configs/webpack.config.ts",
+    "webpack-dev-server": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json webpack-dev-server -r ts-node/register -r esm --hot --config ./configs/webpack.config.ts",
     "webpack": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json yarn ts-node `yarn bin`/webpack -r esm --config ./configs/webpack.config.ts",
     "s": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json start",
     "start": "TMUX= tmux -f '' -S /tmp/BlogFront-tmux.sock new-session \\; split-window -h \\; select-pane -t %0 \\; send-keys C-m \\; send-keys 'yarn webpack-serve' C-m \\; select-pane -t %1 \\; send-keys 'yarn shadow-cljs server -A:nrepl' C-m"
@@ -22,23 +22,21 @@
     "reporter": "@start/reporter-verbose"
   },
   "dependencies": {
+    "airtable": "^0.5.2",
+    "aws-sdk": "^2.113.0",
     "create-react-class": "^15.6.3",
     "lodash.identity": "^3.0.0",
+    "lodash.isobjectlike": "^4.0.0",
+    "lodash.kebabcase": "^4.0.0",
+    "lodash.lowerfirst": "^4.0.0",
+    "lodash.startcase": "^4.0.0",
+    "lodash.upperfirst": "^4.3.1",
+    "octokat": "^0.10.0",
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
     "react-dom-server": "^0.0.5"
   },
   "devDependencies": {
-    "@start/cli": "^0.2.0",
-    "@start/plugin-copy": "^0.2.2",
-    "@start/plugin-find": "^0.2.1",
-    "@start/plugin-read": "^0.2.0",
-    "@start/plugin-remove": "^0.2.1",
-    "@start/plugin-rename": "^0.2.1",
-    "@start/plugin-sequence": "^0.2.0",
-    "@start/plugin-watch": "^0.2.0",
-    "@start/plugin-write": "^0.2.1",
-    "@start/reporter-verbose": "^0.1.0",
     "@types/copy-webpack-plugin": "^4.4.1",
     "@types/del": "^3.0.1",
     "@types/globby": "^8.0.0",
@@ -48,8 +46,7 @@
     "@types/node": "^10.5.2",
     "@types/node-sass": "^3.10.32",
     "@types/webpack": "^4.4.6",
-    "@types/webpack-serve": "^2.0.0",
-    "browser-sync": "^2.24.7",
+    "@types/webpack-dev-server": "^3.1.1",
     "copy-webpack-plugin": "^4.5.2",
     "css-loader": "^1.0.0",
     "del": "^3.0.0",
@@ -65,7 +62,7 @@
     "ts-node": "^7.0.1",
     "typescript": "^3.0.3",
     "webpack": "^4.16.1",
-    "webpack-command": "^0.4.1",
-    "webpack-serve": "^2.0.2"
+    "webpack-cli": "^3.1.0",
+    "webpack-dev-server": "^3.1.8"
   }
 }

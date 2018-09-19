@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import Sass from 'sass'
 import webpack, { Configuration } from 'webpack'
-import { Options as WebpackServeOptions } from 'webpack-serve'
+import {} from 'webpack-dev-server'
 import CopyWebpackPlugin from 'copy-webpack-plugin'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import HtmlWebpackIncludeAssetsPlugin from 'html-webpack-include-assets-plugin'
@@ -105,10 +105,10 @@ export const config: Configuration = {
       APP_VERSION: `"${packageInfo.version}"`,
     }),
   ],
-}
-
-export const serve: WebpackServeOptions = {
-  content: path.resolve(__dirname, '../public'),
+  devServer: {
+    port: 12564,
+    contentBase: path.resolve(__dirname, '../public'),
+  },
 }
 
 export default config

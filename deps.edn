@@ -1,6 +1,8 @@
 {:paths ["cljs"]
  :deps
- {reagent {:mvn/version "0.8.1"
+ {c4605.utils {:git/url "https://github.com/bolasblack/c4605.utils"
+               :sha "8303c870fa904b7d27c760d5427fd08f30aac1fa"}
+  reagent {:mvn/version "0.8.1"
            :exclusions [cljsjs/react
                         cljsjs/react-dom
                         cljsjs/react-dom-server
