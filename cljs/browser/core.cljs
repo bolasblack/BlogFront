@@ -27,7 +27,7 @@
       (assoc :loading-posts false)
       (assoc :posts (:payload action))))
 
-(defmethod reducer :default [])
+(defmethod reducer :default [state] state)
 
 
 (defmulti subscribe #(:type %))
@@ -41,14 +41,18 @@
 
 ;; components
 
-(defn blog-post [post]
+(defn blog-post-title-item [post]
   ^{:key (:url post)}
-  [:li (:name post)])
+  [:li.blog-post
+   [:a {:href (:path post)}
+    [:time (g/date post)]
+    [:h3 (g/title post)]]])
 
 (defn blog-posts []
-  (if (:loading-posts @state)
-    [:h1 "Loading..."]
-    [:ul (map blog-post (:posts @state))]))
+  [:div.blog-posts
+   (if (:loading-posts @state)
+     [:h1 "Loading..."]
+     [:ul (map blog-post-title-item (:posts @state))])])
 
 
 ;; initialize
@@ -71,9 +75,17 @@
     (f/dispatch! store {:type :posts-fetch})
     store))
 
-(dom-ready
- (fn []
-   (create-store)
-   (r/render
-    [blog-posts]
-    (js/document.getElementById "app"))))
+(defn ^:dev/before-load unmount-root []
+  (r/unmount-component-at-node
+   (js/document.getElementById "app")))
+
+(defn ^:dev/after-load mount-root []
+  (r/render
+   [blog-posts]
+   (js/document.getElementById "app")))
+
+(defn ^:dev/once init []
+  (dom-ready
+   (fn []
+     (create-store)
+     (mount-root))))
