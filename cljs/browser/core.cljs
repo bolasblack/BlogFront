@@ -1,17 +1,18 @@
 (ns browser.core
-  (:require-macros [cljs.core.async.macros :refer [go go-loop]])
-  (:require [reagent.core :as r]
-            [cljs.core.async :as a]
-            [browser.utils :refer [dom-ready]]
-            [browser.flux :as f]
-            [browser.github :as g]
-            [redux-map-action.core :as rc]))
+  (:require
+   [reagent.core :as r]
+   [utils.async :as ua :include-macros true]
+   [browser.utils :refer [dom-ready]]
+   [browser.flux :as f]
+   [browser.github :as g]
+   [redux-map-action.core :as rc]))
 
 ;; state
 
 (defrecord State
     [loading-posts
-     posts])
+     posts
+     loading-post])
 
 (defonce state
   (r/atom (map->State {})))
@@ -22,10 +23,19 @@
 (defmethod reducer :posts-fetch [state action]
   (assoc state :loading-posts true))
 
-(defmethod reducer :posts-fetched [state action]
+(defmethod reducer :posts-fetched [state {:keys [posts]}]
+  (let [ziped-posts (zipmap (map g/id posts) posts)]
+    (-> state
+        (assoc :loading-posts false)
+        (assoc :posts ziped-posts))))
+
+(defmethod reducer :post-fetch [state {:keys [post]}]
+  (assoc-in state [:loading-post (g/id post)] true))
+
+(defmethod reducer :post-fetched [state {:keys [post]}]
   (-> state
-      (assoc :loading-posts false)
-      (assoc :posts (:payload action))))
+      (assoc-in [:loading-post (g/id post)] false)
+      (assoc-in [:posts (g/id post)] post)))
 
 (defmethod reducer :default [state] state)
 
@@ -33,8 +43,12 @@
 (defmulti subscribe #(:type %))
 
 (defmethod subscribe :posts-fetch [action store]
-  (go (f/dispatch! store {:type :posts-fetched
-                          :payload (a/<! (g/get-posts))})))
+  (ua/go-try (f/dispatch! store {:type :posts-fetched
+                                 :posts (ua/<? (g/get-posts))})))
+
+(defmethod subscribe :post-title-clicked [{:keys [post]} store]
+  (ua/go-try (f/dispatch! store {:type :post-fetch :post post})
+             (f/dispatch! store {:type :post-fetched :post (ua/<? (g/get-post post))})))
 
 (defmethod subscribe :default [])
 
@@ -42,22 +56,25 @@
 ;; components
 
 (defn blog-post-title-item [post]
-  ^{:key (:url post)}
-  [:li.blog-post
-   [:a {:href (:path post)}
-    [:time (g/date post)]
-    [:h3 (g/title post)]]])
+  ^{:key (g/id post)}
+  [:li.blog-post {:on-click #(f/dispatch! @store {:type :post-title-clicked :post post})}
+   [:time (g/date post)]
+   [:h3 (g/title post)]])
 
 (defn blog-posts []
   [:div.blog-posts
    (if (:loading-posts @state)
      [:h1 "Loading..."]
-     [:ul (map blog-post-title-item (:posts @state))])])
+     [:ul (map #(blog-post-title-item (last %)) (:posts @state))])])
 
+(defn app []
+  [blog-posts])
 
 ;; initialize
 
-(defn create-store []
+(defonce store (atom nil))
+
+(defn create-store! []
   (let [devtools-enhancer (if js/window.__REDUX_DEVTOOLS_EXTENSION__
                             (js/window.__REDUX_DEVTOOLS_EXTENSION__
                              #js {:serialize
@@ -70,10 +87,9 @@
                   rc/enhancer
                   f/clj-atom-state-compatible-enhancer
                   (f/apply-middleware (f/chan-middleware subscribe))
-                  (rc/wrap-redux-devtools-enhancer devtools-enhancer))
-        store (f/create-store reducer state enhancer)]
-    (f/dispatch! store {:type :posts-fetch})
-    store))
+                  (rc/wrap-redux-devtools-enhancer devtools-enhancer))]
+    (reset! store (f/create-store reducer state enhancer))
+    (f/dispatch! @store {:type :posts-fetch})))
 
 (defn ^:dev/before-load unmount-root []
   (r/unmount-component-at-node
@@ -81,11 +97,11 @@
 
 (defn ^:dev/after-load mount-root []
   (r/render
-   [blog-posts]
+   [app]
    (js/document.getElementById "app")))
 
-(defn ^:dev/once init []
+(if-not @store
   (dom-ready
    (fn []
-     (create-store)
+     (create-store!)
      (mount-root))))
