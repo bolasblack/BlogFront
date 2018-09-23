@@ -4,7 +4,8 @@
             [cljs.core.async :as a]
             [browser.utils :refer [dom-ready]]
             [browser.flux :as f]
-            [browser.github :as g]))
+            [browser.github :as g]
+            [redux-map-action.core :as rc]))
 
 ;; state
 
@@ -15,17 +16,27 @@
 (defonce state
   (r/atom (map->State {})))
 
-(defmethod f/reduce :posts-fetch [state]
+
+(defmulti reducer #(:type %2))
+
+(defmethod reducer :posts-fetch [state action]
   (assoc state :loading-posts true))
 
-(defmethod f/reduce :posts-fetched [state posts]
+(defmethod reducer :posts-fetched [state action]
   (-> state
       (assoc :loading-posts false)
-      (assoc :posts posts)))
+      (assoc :posts (:payload action))))
 
-(defmethod f/subscribe :posts-fetch
-  [state-ref action dispatch]
-  (go (dispatch :posts-fetched (a/<! (g/get-posts)))))
+(defmethod reducer :default [])
+
+
+(defmulti subscribe #(:type %))
+
+(defmethod subscribe :posts-fetch [action store]
+  (go (f/dispatch! store {:type :posts-fetched
+                          :payload (a/<! (g/get-posts))})))
+
+(defmethod subscribe :default [])
 
 
 ;; components
@@ -37,15 +48,32 @@
 (defn blog-posts []
   (if (:loading-posts @state)
     [:h1 "Loading..."]
-    [:ul (map #(vector blog-post %) (:posts @state))]))
+    [:ul (map blog-post (:posts @state))]))
 
 
 ;; initialize
 
+(defn create-store []
+  (let [devtools-enhancer (if js/window.__REDUX_DEVTOOLS_EXTENSION__
+                            (js/window.__REDUX_DEVTOOLS_EXTENSION__
+                             #js {:serialize
+                                  #js {:replacer #(if (coll? %2)
+                                                    #js {:cljs-struct true
+                                                         :data (clj->js %2)}
+                                                    %2)}})
+                            identity)
+        enhancer (comp
+                  rc/enhancer
+                  f/clj-atom-state-compatible-enhancer
+                  (f/apply-middleware (f/chan-middleware subscribe))
+                  (rc/wrap-redux-devtools-enhancer devtools-enhancer))
+        store (f/create-store reducer state enhancer)]
+    (f/dispatch! store {:type :posts-fetch})
+    store))
+
 (dom-ready
  (fn []
-   (f/init state)
-   (f/dispatch :posts-fetch)
+   (create-store)
    (r/render
     [blog-posts]
     (js/document.getElementById "app"))))

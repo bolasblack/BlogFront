@@ -4,11 +4,10 @@
   "description": "My GitHub blog front",
   "main": "",
   "scripts": {
-    "browser-sync": "browser-sync --files='dist/*.css' --files='dist/*.html' --no-open ./dist",
     "webpack-dev-server": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json webpack-dev-server -r ts-node/register -r esm --hot --config ./configs/webpack.config.ts",
     "webpack": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json yarn ts-node `yarn bin`/webpack -r esm --config ./configs/webpack.config.ts",
     "s": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json start",
-    "start": "TMUX= tmux -f '' -S /tmp/BlogFront-tmux.sock new-session \\; split-window -h \\; select-pane -t %0 \\; send-keys C-m \\; send-keys 'yarn webpack-serve' C-m \\; select-pane -t %1 \\; send-keys 'yarn shadow-cljs server -A:nrepl' C-m"
+    "start": "TMUX= tmux -f '' -S /tmp/BlogFront-tmux.sock new-session \\; split-window -h \\; select-pane -t %0 \\; send-keys C-m \\; send-keys 'yarn webpack-dev-server' C-m \\; select-pane -t %1 \\; send-keys 'yarn shadow-cljs server -A:nrepl' C-m"
   },
   "githubBlogRepo": "bolasblack/bolasblack.github.com",
   "keywords": [],
@@ -34,7 +33,8 @@
     "octokat": "^0.10.0",
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
-    "react-dom-server": "^0.0.5"
+    "react-dom-server": "^0.0.5",
+    "redux": "^4.0.0"
   },
   "devDependencies": {
     "@types/copy-webpack-plugin": "^4.4.1",
