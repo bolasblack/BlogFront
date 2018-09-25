@@ -30,6 +30,8 @@
     "lodash.lowerfirst": "^4.0.0",
     "lodash.startcase": "^4.0.0",
     "lodash.upperfirst": "^4.3.1",
+    "marked": "^0.5.0",
+    "normalize.css": "^8.0.0",
     "octokat": "^0.10.0",
     "react": "^16.4.1",
     "react-dom": "^16.4.1",

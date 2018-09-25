@@ -44,12 +44,10 @@
                              (filter (comp #(not (or (s/starts-with? % "_")
                                                      (s/starts-with? % ".")))
                                            :name))
-                             (map map->Post)
-                             reverse)]
+                             (map map->Post))]
     posts))
 
 (defn parse-post-content [raw-post content]
-  (js* "debugger")
   (let [post (-> raw-post
                  (js->clj :keywordize-keys true)
                  map->Post)

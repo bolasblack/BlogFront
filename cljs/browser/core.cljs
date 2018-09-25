@@ -2,17 +2,22 @@
   (:require
    [reagent.core :as r]
    [utils.async :as ua :include-macros true]
-   [browser.utils :refer [dom-ready]]
+   [browser.utils :refer [dom-ready classnames]]
    [browser.flux :as f]
    [browser.github :as g]
-   [redux-map-action.core :as rc]))
+   [redux-map-action.core :as rc]
+   ["marked" :as md]))
 
-;; state
+;; store
+
+(defonce store (atom nil))
 
 (defrecord State
-    [loading-posts
+    [loading-post-list
      posts
-     loading-post])
+     loading-posts
+     visited-posts
+     visiting-post])
 
 (defonce state
   (r/atom (map->State {})))
@@ -21,21 +26,30 @@
 (defmulti reducer #(:type %2))
 
 (defmethod reducer :posts-fetch [state action]
-  (assoc state :loading-posts true))
+  (assoc state :loading-post-list true))
 
 (defmethod reducer :posts-fetched [state {:keys [posts]}]
   (let [ziped-posts (zipmap (map g/id posts) posts)]
     (-> state
-        (assoc :loading-posts false)
+        (assoc :loading-post-list false)
         (assoc :posts ziped-posts))))
 
 (defmethod reducer :post-fetch [state {:keys [post]}]
-  (assoc-in state [:loading-post (g/id post)] true))
+  (assoc-in state [:loading-posts (g/id post)] true))
 
 (defmethod reducer :post-fetched [state {:keys [post]}]
   (-> state
-      (assoc-in [:loading-post (g/id post)] false)
-      (assoc-in [:posts (g/id post)] post)))
+      (assoc-in [:posts (g/id post)] post)
+      (assoc-in [:loading-posts (g/id post)] false)))
+
+(defmethod reducer :post-show [state {:keys [post]}]
+  (-> state
+      (assoc-in [:visited-posts (g/id post)] true)
+      (assoc-in [:visiting-post] (g/id post))))
+
+(defmethod reducer :post-unshow [state {:keys [post]}]
+  (when (= (:visiting-post state) (g/id post))
+    (assoc state :visiting-post nil)))
 
 (defmethod reducer :default [state] state)
 
@@ -46,7 +60,7 @@
   (ua/go-try (f/dispatch! store {:type :posts-fetched
                                  :posts (ua/<? (g/get-posts))})))
 
-(defmethod subscribe :post-title-clicked [{:keys [post]} store]
+(defmethod subscribe :post-show [{:keys [post]} store]
   (ua/go-try (f/dispatch! store {:type :post-fetch :post post})
              (f/dispatch! store {:type :post-fetched :post (ua/<? (g/get-post post))})))
 
@@ -55,24 +69,44 @@
 
 ;; components
 
-(defn blog-post-title-item [post]
+(defn BlogPostsTitleItem [post]
   ^{:key (g/id post)}
-  [:li.blog-post {:on-click #(f/dispatch! @store {:type :post-title-clicked :post post})}
-   [:time (g/date post)]
-   [:h3 (g/title post)]])
+  [:li.BlogPostsTitleItem {:on-click #(f/dispatch! @store {:type :post-show :post post})}
+   [:a {:className (classnames {:visited (get-in @state [:visited-posts (g/id post)])})
+        :href "javascript:;"}
+    [:time.BlogPostsTitleItem__date (g/date post)]
+    [:h3.BlogPostsTitleItem__title (g/title post)]]])
 
-(defn blog-posts []
-  [:div.blog-posts
-   (if (:loading-posts @state)
+(defn BlogPosts []
+  [:div.BlogPosts
+   (if (:loading-post-list @state)
      [:h1 "Loading..."]
-     [:ul (map #(blog-post-title-item (last %)) (:posts @state))])])
+     [:ul (->> (:posts @state)
+               (map last)
+               (sort-by #(g/date %) >)
+               (map BlogPostsTitleItem)
+               doall)])])
 
-(defn app []
-  [blog-posts])
+(defn BlogPost []
+  (let [visiting-post-id (:visiting-post @state)
+        visiting-post (get-in @state [:posts visiting-post-id])]
+    [:article.BlogPost
+     [:header.BlogPost__header
+      [:div.BlogPost__back-list
+       {:on-click #(f/dispatch! @store {:type :post-unshow :post visiting-post})}
+       [:i.icon-back]]
+      [:h1 (g/title visiting-post)]]
+     (if (and (get-in @state [:loading-posts visiting-post-id])
+              (:content visiting-post))
+       [:div "Loading..."]
+       [:div.BlogPost__md {:dangerously-set-inner-HTML {:__html (md (:content visiting-post))}}])]))
+
+(defn App []
+  (if (:visiting-post @state)
+    [BlogPost]
+    [BlogPosts]))
 
 ;; initialize
-
-(defonce store (atom nil))
 
 (defn create-store! []
   (let [devtools-enhancer (if js/window.__REDUX_DEVTOOLS_EXTENSION__
@@ -97,7 +131,7 @@
 
 (defn ^:dev/after-load mount-root []
   (r/render
-   [app]
+   [App]
    (js/document.getElementById "app")))
 
 (if-not @store

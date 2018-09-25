@@ -1,13 +1,158 @@
+@import "../node_modules/normalize.css/normalize";
+
+$font-size: 18px;
+$font-size-small: 14px;
+$line-height: 1.8;
+$container-vertical-margin: 80px;
+$container-width: 600px;
+
 * {
   box-sizing: border-box;
+}
+
+i {
+  font-style: normal;
 }
 
 body {
   margin: 0;
   padding: 0;
+  font-size: $font-size;
+  line-height: $line-height;
 }
 
-.blog-posts {
-  .blog-post {
+.BlogPosts {
+  margin: $container-vertical-margin auto;
+  width: $container-width;
+  display: block;
+
+  > ul {
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding: 0;
+    list-style: none;
+  }
+}
+
+.BlogPostsTitleItem {
+  margin: 6px 0;
+  cursor: pointer;
+
+  $link-color: #333;
+  $link-color-active: lighten($link-color, 30%);
+  $link-color-visited: lighten($link-color, 50%);
+
+  &:hover > a {
+    border-bottom: 1px solid $link-color;
+  }
+  > a {
+    color: $link-color;
+    text-decoration: none;
+
+    &:active, &.active {
+      color: $link-color-active;
+      border-bottom-color: $link-color-active;
+    }
+
+    &:visited, &.visited {
+      color: $link-color-visited;
+      border-bottom-color: $link-color-visited;
+    }
+  }
+
+  &__date {
+    font-family: monospace;
+  }
+
+  &__title {
+    display: inline-block;
+    margin: 0 0 0 10px;
+    font-weight: normal;
+    font-size: $font-size;
+  }
+}
+
+.BlogPost {
+  margin: $container-vertical-margin auto;
+  width: $container-width;
+  display: block;
+
+  %header-title-prefix {
+    position: absolute;
+    top: 50%;
+    margin-left: -6px;
+    transform: translate(-100%, -50%);
+    color: #aaa;
+  }
+
+  %header-title {
+    position: relative;
+
+    &::before {
+      @extend %header-title-prefix;
+      text-transform: uppercase;
+      font-size: 0.8em;
+    }
+  }
+
+  @for $h from 1 through 6 {
+    h#{$h} {
+      @extend %header-title;
+
+      &::before {
+        content: "h#{$h}";
+      }
+    }
+  }
+  h2, h3, h4, h5, h6 {
+    margin: 20px 0 0 0;
+  }
+
+  // from https://assets-cdn.github.com/assets/github-5043b3d96d50b119b971c2cdde4e0a62.css
+  h1 { font-size: 2em; }
+  h2 { font-size: 1.5em; }
+  h3 { font-size: 1.25em; }
+  h4 { font-size: 1em; }
+  h5 { font-size: 0.875em; }
+  h6 { font-size: 0.85em; }
+
+  &__header h1::before {
+    content: '';
+  }
+  &__header {
+    position: relative;
+  }
+  &__back-list {
+    @extend %header-title-prefix;
+    margin-left: -10px;
+    padding: 10px 11px 10px 9px;
+    font-size: 2em;
+    border-radius: 50px;
+    cursor: pointer;
+
+    &:hover {
+      background: #eee;
+    }
+
+    .icon-back {
+      position: relative;
+      display: block;
+      font-size: 0;
+    }
+    .icon-back::before {
+      content: url('data:image/svg+xml;utf8,<svg width="16" height="16" viewBox="0 0 89 96" fill="none" xmlns="http://www.w3.org/2000/svg"> <path fill-rule="evenodd" clip-rule="evenodd" d="M86.612 2.39771C83.8783 -0.33596 79.4461 -0.33596 76.7125 2.39771L36.4089 42.7012L36.4074 42.7028C36.0657 43.0445 35.7667 43.4127 35.5104 43.8009C33.7164 46.518 34.0154 50.2103 36.4074 52.6023L36.4085 52.6034L76.7125 92.9074C79.4461 95.641 83.8783 95.641 86.612 92.9074C89.3456 90.1737 89.3456 85.7415 86.612 83.0079L51.2566 47.6525L86.612 12.2972C89.3456 9.56353 89.3456 5.13138 86.612 2.39771ZM43.0079 3.1023C45.7416 0.36863 50.1737 0.36863 52.9074 3.1023C55.641 5.83597 55.641 10.2681 52.9074 13.0018L17.552 48.3571L52.9074 83.7125C55.641 86.4461 55.641 90.8783 52.9074 93.612C50.1737 96.3456 45.7416 96.3456 43.0079 93.612L2.7028 53.3069C-0.0308714 50.5732 -0.0308714 46.1411 2.7028 43.4074L43.0079 3.1023Z" fill="#C4C4C4"/> </svg>');
+    }
+  }
+
+  &__md {
+    pre {
+      padding: 10px;
+      font-size: $font-size-small;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+      background: #f3f5f6;
+    }
   }
 }
