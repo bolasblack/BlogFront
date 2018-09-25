@@ -2,11 +2,10 @@
   (:require
    [reagent.core :as r]
    [utils.async :as ua :include-macros true]
-   [browser.utils :refer [dom-ready classnames]]
+   [browser.utils :refer [dom-ready classnames render-md]]
    [browser.flux :as f]
    [browser.github :as g]
-   [redux-map-action.core :as rc]
-   ["marked" :as md]))
+   [redux-map-action.core :as rc]))
 
 ;; store
 
@@ -61,8 +60,10 @@
                                  :posts (ua/<? (g/get-posts))})))
 
 (defmethod subscribe :post-show [{:keys [post]} store]
-  (ua/go-try (f/dispatch! store {:type :post-fetch :post post})
-             (f/dispatch! store {:type :post-fetched :post (ua/<? (g/get-post post))})))
+  (ua/go-try
+   (if-not (:content post)
+     (f/dispatch! store {:type :post-fetch :post post}))
+   (f/dispatch! store {:type :post-fetched :post (ua/<? (g/get-post post))})))
 
 (defmethod subscribe :default [])
 
@@ -96,10 +97,10 @@
        {:on-click #(f/dispatch! @store {:type :post-unshow :post visiting-post})}
        [:i.icon-back]]
       [:h1 (g/title visiting-post)]]
-     (if (and (get-in @state [:loading-posts visiting-post-id])
-              (:content visiting-post))
+     (if (or (get-in @state [:loading-posts visiting-post-id])
+             (not (:content visiting-post)))
        [:div "Loading..."]
-       [:div.BlogPost__md {:dangerously-set-inner-HTML {:__html (md (:content visiting-post))}}])]))
+       [:div.BlogPost__md {:dangerously-set-inner-HTML {:__html (render-md (:content visiting-post))}}])]))
 
 (defn App []
   (if (:visiting-post @state)
