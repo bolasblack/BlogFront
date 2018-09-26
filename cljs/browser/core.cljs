@@ -3,8 +3,8 @@
    [reagent.core :as r]
    [utils.async :as ua :include-macros true]
    [browser.utils :refer [dom-ready classnames render-md]]
-   [browser.flux :as f]
    [browser.github :as g]
+   [flux.core :as f]
    [redux-map-action.core :as rc]))
 
 ;; store
@@ -55,15 +55,38 @@
 
 (defmulti subscribe #(:type %))
 
+(defmethod subscribe :init-app [action store]
+  (ua/go-try
+   (ua/<? (subscribe {:type :posts-fetch} store))
+   (when-let [url-info (g/parse-post-heading-id js/location.hash)]
+     (when-let [post (get-in @state [:posts (:post-id url-info)])]
+       (f/dispatch! store {:type :post-show :post post})))))
+
+;; 临时这么实现，后面还是得把 action 变成 action-chan ，然后就可以把
+;; 这部分逻辑放回到 :init-app 里了
+(defmethod subscribe :post-fetched [action store]
+  (js/setTimeout
+   #(when-let [url-info (g/parse-post-heading-id js/location.hash)]
+      (when (= (g/id (:post action)) (:post-id url-info))
+        (when-let [elem (js/document.getElementById (:heading-id url-info))]
+          (let [elem-rect (.getBoundingClientRect elem)
+                scroll-top (+ js/document.documentElement.scrollTop elem-rect.top)]
+            (js/scrollTo #js {:top scroll-top
+                              :behavior "smooth"})))))
+   0))
+
 (defmethod subscribe :posts-fetch [action store]
-  (ua/go-try (f/dispatch! store {:type :posts-fetched
-                                 :posts (ua/<? (g/get-posts))})))
+  (ua/go-try
+   (f/dispatch! store {:type :posts-fetched
+                       :posts (ua/<? (g/get-posts))})))
 
 (defmethod subscribe :post-show [{:keys [post]} store]
   (ua/go-try
-   (if-not (:content post)
-     (f/dispatch! store {:type :post-fetch :post post}))
-   (f/dispatch! store {:type :post-fetched :post (ua/<? (g/get-post post))})))
+   (if (:content post)
+     (f/dispatch! store {:type :post-fetched :post post})
+     (do
+       (f/dispatch! store {:type :post-fetch :post post})
+       (f/dispatch! store {:type :post-fetched :post (ua/<? (g/get-post post))})))))
 
 (defmethod subscribe :default [])
 
@@ -74,7 +97,7 @@
   ^{:key (g/id post)}
   [:li.BlogPostsTitleItem {:on-click #(f/dispatch! @store {:type :post-show :post post})}
    [:a {:className (classnames {:visited (get-in @state [:visited-posts (g/id post)])})
-        :href "javascript:;"}
+        :href (g/blog-url post)}
     [:time.BlogPostsTitleItem__date (g/date post)]
     [:h3.BlogPostsTitleItem__title (g/title post)]]])
 
@@ -93,14 +116,18 @@
         visiting-post (get-in @state [:posts visiting-post-id])]
     [:article.BlogPost
      [:header.BlogPost__header
-      [:div.BlogPost__back-list
-       {:on-click #(f/dispatch! @store {:type :post-unshow :post visiting-post})}
+      [:a.BlogPost__back-list
+       {:href "#/"
+        :on-click #(f/dispatch! @store {:type :post-unshow :post visiting-post})}
        [:i.icon-back]]
       [:h1 (g/title visiting-post)]]
      (if (or (get-in @state [:loading-posts visiting-post-id])
              (not (:content visiting-post)))
        [:div "Loading..."]
-       [:div.BlogPost__md {:dangerously-set-inner-HTML {:__html (render-md (:content visiting-post))}}])]))
+       [:div.BlogPost__md
+        {:dangerously-set-inner-HTML
+         {:__html (render-md (:content visiting-post)
+                             :heading-id-renderer #(g/heading-id visiting-post %))}}])]))
 
 (defn App []
   (if (:visiting-post @state)
@@ -124,7 +151,7 @@
                   (f/apply-middleware (f/chan-middleware subscribe))
                   (rc/wrap-redux-devtools-enhancer devtools-enhancer))]
     (reset! store (f/create-store reducer state enhancer))
-    (f/dispatch! @store {:type :posts-fetch})))
+    (f/dispatch! @store {:type :init-app})))
 
 (defn ^:dev/before-load unmount-root []
   (r/unmount-component-at-node
@@ -133,7 +160,8 @@
 (defn ^:dev/after-load mount-root []
   (r/render
    [App]
-   (js/document.getElementById "app")))
+   (js/document.getElementById "app"))
+  (f/dispatch! @store {:type :init-app}))
 
 (if-not @store
   (dom-ready

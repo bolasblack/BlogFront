@@ -12,7 +12,9 @@
 (defprotocol IPost
   (id [post])
   (date [post])
-  (title [post]))
+  (title [post])
+  (blog-url [post])
+  (heading-id [post heading-text]))
 
 (defrecord Post [;; 获取 contents 时就能获取的信息
                  type encoding size name path sha url git_url html_url download_url
@@ -32,7 +34,11 @@
             :name
             parse-post-filename
             :title
-            (s/replace "_" " ")))))
+            (s/replace "_" " "))))
+  (blog-url [post]
+    (str "#/" (js/encodeURIComponent (id post))))
+  (heading-id [post heading-text]
+    (str "/" (js/encodeURIComponent (id post)) "/" (js/encodeURIComponent heading-text))))
 
 (def ^:private repo (.repos (Github.) "bolasblack" "BlogPosts"))
 
@@ -69,3 +75,13 @@
      raw-post
      (when (= (.-encoding raw-post) "base64")
        (ua/<p? (.read raw-post))))))
+
+(defn parse-post-heading-id
+  "str -> nil | {:post-id str :heading str :heading-id str}"
+  [url-hash]
+  (when-let [matches (re-matches #"^#?/([^/]+)(?:/(.*)$)" url-hash)]
+    (->> matches
+         (drop 1)
+         (map js/decodeURIComponent)
+         (zipmap [:post-id :heading])
+         (merge {:heading-id (s/replace url-hash #"^#?" "")}))))

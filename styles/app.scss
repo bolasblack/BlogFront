@@ -88,22 +88,19 @@ body {
     color: #aaa;
   }
 
-  %header-title {
-    position: relative;
-
-    &::before {
-      @extend %header-title-prefix;
-      text-transform: uppercase;
-      font-size: 0.8em;
-    }
-  }
-
   @for $h from 1 through 6 {
     h#{$h} {
-      @extend %header-title;
+      position: relative;
 
-      &::before {
-        content: "h#{$h}";
+      .heading-anchor {
+        @extend %header-title-prefix;
+        text-transform: uppercase;
+        text-decoration: none;
+        font-size: 0.8em;
+
+        &::before {
+          content: "h#{$h}";
+        }
       }
     }
   }

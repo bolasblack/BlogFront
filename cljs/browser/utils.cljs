@@ -22,12 +22,17 @@
                                  (callback))]
       (js/document.addEventListener "DOMContentLoaded" callback-when-loaded))))
 
-(defn render-md [content]
+(defn render-md [content & {:keys [heading-id-renderer]
+                            :or {heading-id-renderer #(js/encodeURIComponent %)}}]
   (let [renderer (md/Renderer.)
         _ (set!
            renderer.heading
            (fn [text level raw]
-             (str "<h" level " id=\"" (js/encodeURIComponent raw) "\">" text "</h1>")))]
+             (str
+              "<h" level " id=\"" (heading-id-renderer raw) "\">"
+              "<a class=\"heading-anchor\" href=\"#" (heading-id-renderer raw) "\"></a>"
+              text
+              "</h1>")))]
     (md content #js {:renderer renderer
                      :highlight (fn [code lang]
                                   (try

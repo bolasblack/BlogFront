@@ -1,4 +1,4 @@
-(ns browser.flux
+(ns flux.core
   (:require [redux-map-action.core :as rc]
             ["redux" :as r]))
 
