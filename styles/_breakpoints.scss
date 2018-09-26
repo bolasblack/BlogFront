@@ -1,0 +1,49 @@
+// https://www.paintcodeapp.com/news/ultimate-guide-to-iphone-resolutions
+// http://screensiz.es/monitor
+
+$breakpoint-zr: 0px;
+$breakpoint-xs: 425px;
+$breakpoint-sm: 768px;
+$breakpoint-md: 960px;
+$breakpoint-lg: 1280px;
+$breakpoint-xl: 1920px;
+$breakpoints: (
+  $breakpoint-zr,
+  $breakpoint-xs,
+  $breakpoint-sm,
+  $breakpoint-md,
+  $breakpoint-lg,
+  $breakpoint-xl
+);
+
+@mixin breakpoint-up($breakpoint) {
+  @media (min-width: $breakpoint) {
+    @content;
+  }
+}
+
+@mixin breakpoint-down($breakpoint) {
+  @media (max-width: $breakpoint) {
+    @content;
+  }
+}
+
+@mixin breakpoint-between($breakpoint-min, $breakpoint-max) {
+  @media (min-width: $breakpoint-min) and (max-width: $breakpoint-max) {
+    @content;
+  }
+}
+
+@mixin breakpoint-only($breakpoint) {
+  $breakpoint-index: index($breakpoints, $breakpoint);
+
+  @if $breakpoint-index {
+    @media (min-width: $breakpoint) and (max-width: nth($breakpoints, $breakpoint-index + 1)) {
+      @content;
+    }
+  } @else {
+    @media (min-width: $breakpoint) {
+      @content;
+    }
+  }
+}

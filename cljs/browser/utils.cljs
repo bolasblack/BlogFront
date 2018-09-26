@@ -36,6 +36,6 @@
     (md content #js {:renderer renderer
                      :highlight (fn [code lang]
                                   (try
-                                    (.-value (hl/highlight lang code))
+                                    (.-value (hl/highlight lang (s/trim code)))
                                     (catch js/Error err
-                                      code)))})))
+                                      (s/trim code))))})))

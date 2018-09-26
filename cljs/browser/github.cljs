@@ -79,7 +79,7 @@
 (defn parse-post-heading-id
   "str -> nil | {:post-id str :heading str :heading-id str}"
   [url-hash]
-  (when-let [matches (re-matches #"^#?/([^/]+)(?:/(.*)$)" url-hash)]
+  (when-let [matches (re-matches #"^#?/([^/]+)(?:/(.*)$)?" url-hash)]
     (->> matches
          (drop 1)
          (map js/decodeURIComponent)
