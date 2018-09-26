@@ -4,10 +4,12 @@
   "description": "My GitHub blog front",
   "main": "",
   "scripts": {
-    "webpack-dev-server": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json webpack-dev-server -r ts-node/register -r esm --hot --config ./configs/webpack.config.ts",
-    "webpack": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json yarn ts-node `yarn bin`/webpack -r esm --config ./configs/webpack.config.ts",
+    "webpack-dev-server": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json webpack-dev-server -r ts-node/register --hot --config ./configs/webpack.config.ts",
+    "webpack": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json webpack -r ts-node/register --config ./configs/webpack.config.ts",
     "s": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json start",
-    "start": "TMUX= tmux -f '' -S /tmp/BlogFront-tmux.sock new-session \\; split-window -h \\; select-pane -t %0 \\; send-keys C-m \\; send-keys 'yarn webpack-dev-server' C-m \\; select-pane -t %1 \\; send-keys 'yarn shadow-cljs server -A:nrepl' C-m"
+    "start": "TMUX= tmux -f '' -S /tmp/BlogFront-tmux.sock new-session \\; split-window -h \\; select-pane -t %0 \\; send-keys C-m \\; send-keys 'yarn webpack-dev-server' C-m \\; select-pane -t %1 \\; send-keys 'yarn shadow-cljs server -A:nrepl' C-m",
+    "build": "yarn shadow-cljs release browser && NODE_ENV=production yarn webpack",
+    "p": "./configs/publish.sh"
   },
   "githubBlogRepo": "bolasblack/bolasblack.github.com",
   "keywords": [],
@@ -40,6 +42,7 @@
     "redux": "^4.0.0"
   },
   "devDependencies": {
+    "@types/clean-webpack-plugin": "^0.1.2",
     "@types/copy-webpack-plugin": "^4.4.1",
     "@types/del": "^3.0.1",
     "@types/globby": "^8.0.0",
@@ -50,6 +53,7 @@
     "@types/node-sass": "^3.10.32",
     "@types/webpack": "^4.4.6",
     "@types/webpack-dev-server": "^3.1.1",
+    "clean-webpack-plugin": "^0.1.19",
     "copy-webpack-plugin": "^4.5.2",
     "css-loader": "^1.0.0",
     "del": "^3.0.0",

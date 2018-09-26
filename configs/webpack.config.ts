@@ -3,6 +3,7 @@ import path from 'path'
 import Sass from 'sass'
 import webpack, { Configuration } from 'webpack'
 import {} from 'webpack-dev-server'
+import CleanWebpackPlugin from 'clean-webpack-plugin'
 import CopyWebpackPlugin from 'copy-webpack-plugin'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import HtmlWebpackIncludeAssetsPlugin from 'html-webpack-include-assets-plugin'
@@ -72,6 +73,11 @@ export const config: Configuration = {
     maxModules: Infinity,
   },
   plugins: [
+    new CleanWebpackPlugin(['dist'], {
+      root: path.resolve(__dirname, '../'),
+      exclude: ['.gitrepo'],
+      verbose: true,
+    }),
     new CopyWebpackPlugin([{
       from: ASSETS_DEST,
       to: '.',

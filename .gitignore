@@ -19,7 +19,7 @@ node_modules/*
 
 .start-out
 
-dist
 public
+dist
 publish_repo
 test/test-results.xml

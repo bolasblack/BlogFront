@@ -1,4 +1,4 @@
-# blog front
+# my blog front
 
 ## Usage
 
@@ -7,6 +7,5 @@
 ## Components
 
 * React
-* Gulp
 * Webpack
 * shadow-cljs
