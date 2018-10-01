@@ -1,11 +1,13 @@
 (ns browser.core
   (:require
+   [cljs.core.async :as a]
    [reagent.core :as r]
    [utils.async :as ua :include-macros true]
    [browser.utils :refer [dom-ready classnames render-md]]
    [browser.github :as g]
-   [flux.core :as f]
-   [redux-map-action.core :as rc]))
+   [redux.core :as f]
+   [redux.chan-middleware :refer [chan-middleware next-action]]
+   [redux-map-action.core :as rm]))
 
 ;; store
 
@@ -53,43 +55,53 @@
 (defmethod reducer :default [state] state)
 
 
-(defmulti subscribe #(:type %))
-
-(defmethod subscribe :init-app [action store]
+(defn subscribe-posts-fetch [action-chan res-chan]
   (ua/go-try
-   (ua/<? (subscribe {:type :posts-fetch} store))
+   (loop []
+     (ua/<? (next-action action-chan :posts-fetch))
+     (a/>! res-chan {:type :posts-fetched
+                     :posts (ua/<? (g/get-posts))})
+     (recur))))
+
+(defn subscribe-post-show [action-chan res-chan]
+  (ua/go-try
+   (loop []
+     (let [{:keys [post]} (ua/<? (next-action action-chan :post-show))]
+       (a/>! res-chan {:type :post-fetch :post post})
+       (let [post (if (:content post) post (ua/<? (g/get-post post)))]
+         (a/>! res-chan {:type :post-fetched :post post})))
+     (recur))))
+
+(defn scroll-to-element-by-id [elem-id]
+  (when-let [elem (js/document.getElementById elem-id)]
+    (let [elem-rect (.getBoundingClientRect elem)
+          scroll-top (+ js/document.documentElement.scrollTop elem-rect.top)]
+      (js/scrollTo #js {:top scroll-top
+                        :behavior "smooth"}))))
+
+(defn subscribe-init-app [action-chan res-chan]
+  (ua/go-try
+   (a/>! res-chan {:type :posts-fetch})
+   (ua/<? (next-action action-chan :posts-fetched))
    (when-let [url-info (g/parse-post-heading-id js/location.hash)]
      (when-let [post (get-in @state [:posts (:post-id url-info)])]
-       (f/dispatch! store {:type :post-show :post post})))))
+       (a/>! res-chan {:type :post-show :post post})
+       (ua/<? (next-action action-chan :post-fetched))
+       (ua/<? (a/timeout 0))
+       (scroll-to-element-by-id (:heading-id url-info))))))
 
-;; 临时这么实现，后面还是得把 action 变成 action-chan ，然后就可以把
-;; 这部分逻辑放回到 :init-app 里了
-(defmethod subscribe :post-fetched [action store]
-  (js/setTimeout
-   #(when-let [url-info (g/parse-post-heading-id js/location.hash)]
-      (when (= (g/id (:post action)) (:post-id url-info))
-        (when-let [elem (js/document.getElementById (:heading-id url-info))]
-          (let [elem-rect (.getBoundingClientRect elem)
-                scroll-top (+ js/document.documentElement.scrollTop elem-rect.top)]
-            (js/scrollTo #js {:top scroll-top
-                              :behavior "smooth"})))))
-   0))
-
-(defmethod subscribe :posts-fetch [action store]
-  (ua/go-try
-   (f/dispatch! store {:type :posts-fetched
-                       :posts (ua/<? (g/get-posts))})))
-
-(defmethod subscribe :post-show [{:keys [post]} store]
-  (ua/go-try
-   (if (:content post)
-     (f/dispatch! store {:type :post-fetched :post post})
-     (do
-       (f/dispatch! store {:type :post-fetch :post post})
-       (f/dispatch! store {:type :post-fetched :post (ua/<? (g/get-post post))})))))
-
-(defmethod subscribe :default [])
-
+(defn subscribe-dispatcher [action-chan res-chan]
+  (let [mult-action-chan (a/mult action-chan)]
+    (doseq [subscribe
+            [subscribe-init-app
+             subscribe-posts-fetch
+             subscribe-post-show]]
+      (let [cloned-action-chan (a/tap mult-action-chan (a/chan))]
+        ;; 当一个 subscriber 的 chan 结束以后必须 untap ，否则会阻塞
+        ;; 主 action-chan 的 >! 函数
+        (a/take!
+         (subscribe cloned-action-chan res-chan)
+         #(a/untap mult-action-chan cloned-action-chan))))))
 
 ;; components
 
@@ -146,12 +158,11 @@
                                                     %2)}})
                             identity)
         enhancer (comp
-                  rc/enhancer
+                  (f/apply-middleware (chan-middleware subscribe-dispatcher))
+                  rm/enhancer
                   f/clj-atom-state-compatible-enhancer
-                  (f/apply-middleware (f/chan-middleware subscribe))
-                  (rc/wrap-redux-devtools-enhancer devtools-enhancer))]
-    (reset! store (f/create-store reducer state enhancer))
-    (f/dispatch! @store {:type :init-app})))
+                  (rm/wrap-redux-devtools-enhancer devtools-enhancer))]
+    (reset! store (f/create-store reducer state enhancer))))
 
 (defn ^:dev/before-load unmount-root []
   (r/unmount-component-at-node
@@ -160,8 +171,7 @@
 (defn ^:dev/after-load mount-root []
   (r/render
    [App]
-   (js/document.getElementById "app"))
-  (f/dispatch! @store {:type :init-app}))
+   (js/document.getElementById "app")))
 
 (if-not @store
   (dom-ready

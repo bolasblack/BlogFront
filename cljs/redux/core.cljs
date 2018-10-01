@@ -1,6 +1,5 @@
-(ns flux.core
-  (:require [redux-map-action.core :as rc]
-            ["redux" :as r]))
+(ns redux.core
+  (:require ["redux" :as r]))
 
 (defprotocol IStore
   (dispatch! [this action]
@@ -47,16 +46,3 @@
       (let [redux-store (create-store reducer @preloaded-state enhancer)]
         (.subscribe redux-store #(reset! preloaded-state (.getState redux-store)))
         redux-store))))
-
-
-(defn chan-middleware [subscriber & {:keys [dependencies]
-                                     :or {dependencies {}}}]
-  (fn [redux-store]
-    (fn [next-dispatch]
-      (fn [action]
-        (let [result (next-dispatch action)]
-          (subscriber
-           (rc/deserialize-action action)
-           (Store. redux-store)
-           dependencies)
-          result)))))
