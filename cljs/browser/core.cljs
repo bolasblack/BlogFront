@@ -150,18 +150,19 @@
 
 (defn create-store! []
   (let [devtools-enhancer (if js/window.__REDUX_DEVTOOLS_EXTENSION__
-                            (js/window.__REDUX_DEVTOOLS_EXTENSION__
-                             #js {:serialize
-                                  #js {:replacer #(if (coll? %2)
-                                                    #js {:cljs-struct true
-                                                         :data (clj->js %2)}
-                                                    %2)}})
+                            (rm/wrap-redux-devtools-enhancer
+                             (js/window.__REDUX_DEVTOOLS_EXTENSION__
+                              #js {:serialize
+                                   #js {:replacer #(if (coll? %2)
+                                                     #js {:cljs-struct true
+                                                          :data (clj->js %2)}
+                                                     %2)}}))
                             identity)
         enhancer (comp
                   (f/apply-middleware (chan-middleware subscribe-dispatcher))
                   rm/enhancer
                   f/clj-atom-state-compatible-enhancer
-                  (rm/wrap-redux-devtools-enhancer devtools-enhancer))]
+                  devtools-enhancer)]
     (reset! store (f/create-store reducer state enhancer))))
 
 (defn ^:dev/before-load unmount-root []
