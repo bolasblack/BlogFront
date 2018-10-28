@@ -1,8 +1,10 @@
 (ns browser.github
-  (:require ["octokat" :as Github]
-            ["js-yaml" :as js-yaml]
-            [utils.async :as ua :include-macros true]
-            [clojure.string :as s]))
+  (:require
+   ["octokat" :as Github]
+   ["js-yaml" :as js-yaml]
+   [rxcljs.core :as rc :include-macros true]
+   [rxcljs.transformers :as rt :include-macros true]
+   [clojure.string :as s]))
 
 (defn- parse-post-filename [name]
   (->> (re-matches #"^(\d{4}-\d{2}-\d{2})-(.+)\.(?:md)$" name)
@@ -43,14 +45,14 @@
 (def ^:private repo (.repos (Github.) "bolasblack" "BlogPosts"))
 
 (defn get-posts []
-  (ua/go-try-let [directory (ua/<p? (-> (.contents repo "")
-                                      (.fetch)))
-                  contents (js->clj (.-items directory) :keywordize-keys true)
-                  posts (->> contents
-                             (filter (comp #(not (or (s/starts-with? % "_")
-                                                     (s/starts-with? % ".")))
-                                           :name))
-                             (map map->Post))]
+  (rc/go-let [directory (rt/<p! (-> (.contents repo "")
+                                    (.fetch)))
+              contents (js->clj (.-items directory) :keywordize-keys true)
+              posts (->> contents
+                         (filter (comp #(not (or (s/starts-with? % "_")
+                                                 (s/starts-with? % ".")))
+                                       :name))
+                         (map map->Post))]
     posts))
 
 (defn parse-post-content [raw-post content]
@@ -69,12 +71,12 @@
     post))
 
 (defn get-post [post]
-  (ua/go-try-let [raw-post (ua/<p? (-> (.contents repo (:path post))
-                                       (.fetch)))]
+  (rc/go-let [raw-post (rt/<p! (-> (.contents repo (:path post))
+                                   (.fetch)))]
     (parse-post-content
      raw-post
      (when (= (.-encoding raw-post) "base64")
-       (ua/<p? (.read raw-post))))))
+       (rt/<p! (.read raw-post))))))
 
 (defn parse-post-heading-id
   "str -> nil | {:post-id str :heading str :heading-id str}"

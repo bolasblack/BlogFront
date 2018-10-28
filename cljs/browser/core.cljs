@@ -2,7 +2,7 @@
   (:require
    [cljs.core.async :as a]
    [reagent.core :as r]
-   [utils.async :as ua :include-macros true]
+   [rxcljs.core :as rc :include-macros true]
    [browser.utils :refer [dom-ready classnames render-md]]
    [browser.github :as g]
    [redux.core :as f]
@@ -56,21 +56,19 @@
 
 
 (defn subscribe-posts-fetch [action-chan res-chan]
-  (ua/go-try
-   (loop []
-     (ua/<? (next-action action-chan :posts-fetch))
-     (a/>! res-chan {:type :posts-fetched
-                     :posts (ua/<? (g/get-posts))})
-     (recur))))
+  (rc/go-loop []
+    (rc/<! (next-action action-chan :posts-fetch))
+    (rc/>! res-chan {:type :posts-fetched
+                     :posts (rc/<! (g/get-posts))})
+    (recur)))
 
 (defn subscribe-post-show [action-chan res-chan]
-  (ua/go-try
-   (loop []
-     (let [{:keys [post]} (ua/<? (next-action action-chan :post-show))]
-       (a/>! res-chan {:type :post-fetch :post post})
-       (let [post (if (:content post) post (ua/<? (g/get-post post)))]
-         (a/>! res-chan {:type :post-fetched :post post})))
-     (recur))))
+  (rc/go-loop []
+    (let [{:keys [post]} (rc/<! (next-action action-chan :post-show))]
+      (rc/>! res-chan {:type :post-fetch :post post})
+      (let [post (if (:content post) post (rc/<! (g/get-post post)))]
+        (rc/>! res-chan {:type :post-fetched :post post})))
+    (recur)))
 
 (defn scroll-to-element-by-id [elem-id]
   (when-let [elem (js/document.getElementById elem-id)]
@@ -80,15 +78,15 @@
                         :behavior "smooth"}))))
 
 (defn subscribe-init-app [action-chan res-chan]
-  (ua/go-try
-   (a/>! res-chan {:type :posts-fetch})
-   (ua/<? (next-action action-chan :posts-fetched))
-   (when-let [url-info (g/parse-post-heading-id js/location.hash)]
-     (when-let [post (get-in @state [:posts (:post-id url-info)])]
-       (a/>! res-chan {:type :post-show :post post})
-       (ua/<? (next-action action-chan :post-fetched))
-       (ua/<? (a/timeout 0))
-       (scroll-to-element-by-id (:heading-id url-info))))))
+  (rc/go
+    (rc/>! res-chan {:type :posts-fetch})
+    (rc/<! (next-action action-chan :posts-fetched))
+    (when-let [url-info (g/parse-post-heading-id js/location.hash)]
+      (when-let [post (get-in @state [:posts (:post-id url-info)])]
+        (rc/>! res-chan {:type :post-show :post post})
+        (rc/<! (next-action action-chan :post-fetched))
+        (rc/<! (a/timeout 0))
+        (scroll-to-element-by-id (:heading-id url-info))))))
 
 (defn subscribe-dispatcher [action-chan res-chan]
   (let [mult-action-chan (a/mult action-chan)]

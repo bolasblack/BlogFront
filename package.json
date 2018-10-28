@@ -7,7 +7,7 @@
     "webpack-dev-server": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json webpack-dev-server -r ts-node/register --hot --config ./configs/webpack.config.ts",
     "webpack": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json webpack -r ts-node/register --config ./configs/webpack.config.ts",
     "s": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json start",
-    "start": "TMUX= tmux -f '' -S /tmp/BlogFront-tmux.sock new-session \\; split-window -h \\; select-pane -t %0 \\; send-keys C-m \\; send-keys 'yarn webpack-dev-server' C-m \\; select-pane -t %1 \\; send-keys 'yarn shadow-cljs server -A:nrepl' C-m",
+    "start": "TMUX= tmux -f '' -S /tmp/BlogFront-tmux.sock new-session \\; split-window -h \\; select-pane -t %0 \\; send-keys C-m \\; send-keys 'yarn webpack-dev-server' C-m \\; select-pane -t %1 \\; send-keys 'yarn shadow-cljs watch browser -A:nrepl' C-m",
     "build": "yarn shadow-cljs release browser && NODE_ENV=production yarn webpack",
     "p": "./configs/publish.sh"
   },

@@ -1,17 +1,16 @@
 (ns redux.chan-middleware
   (:require
    [cljs.core.async :as a :include-macros true]
-   [utils.async :as ua :include-macros true]
-   [redux.core :refer [Store]]
-   [redux-map-action.core :as rc]))
+   [rxcljs.core :as rc :include-macros true]
+   [rxcljs.transformers :as rt :include-macros true]
+   [redux.core :refer [Store]]))
 
 (defn next-action [action-chan type]
-  (ua/go-try
-   (loop []
-     (let [action (a/<! action-chan)]
-       (if (= type (:type action))
-         action
-         (recur))))))
+  (rc/go-loop []
+    (let [action (rc/<! action-chan)]
+      (if (= type (:type action))
+        action
+        (recur)))))
 
 (defn chan-middleware [subscriber & {:keys [dependencies]
                                      :or {dependencies {}}}]
@@ -20,8 +19,8 @@
           result-chan (a/chan)
           subscriber-chan (subscriber action-chan result-chan dependencies)]
 
-      (a/go-loop []
-        (when-let [action (a/<! result-chan)]
+      (rc/go-loop []
+        (when-let [action (rc/<! result-chan)]
           (.dispatch redux-store action))
         (recur))
 
