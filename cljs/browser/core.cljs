@@ -48,8 +48,8 @@
       (assoc-in [:visited-posts (g/id post)] true)
       (assoc-in [:visiting-post] (g/id post))))
 
-(defmethod reducer :post-unshow [state {:keys [post]}]
-  (when (= (:visiting-post state) (g/id post))
+(defmethod reducer :post-unshow [state {:keys [post-id] :as payload}]
+  (when (= (:visiting-post state) post-id)
     (assoc state :visiting-post nil)))
 
 (defmethod reducer :default [state] state)
@@ -77,16 +77,25 @@
       (js/scrollTo #js {:top scroll-top
                         :behavior "smooth"}))))
 
-(defn subscribe-init-app [action-chan res-chan]
+(defn on-url-hash-changed [action-chan res-chan hash]
   (rc/go
-    (rc/>! res-chan {:type :posts-fetch})
-    (rc/<! (next-action action-chan :posts-fetched))
-    (when-let [url-info (g/parse-post-heading-id js/location.hash)]
+    (if-let [url-info (g/parse-post-heading-id hash)]
       (when-let [post (get-in @state [:posts (:post-id url-info)])]
         (rc/>! res-chan {:type :post-show :post post})
         (rc/<! (next-action action-chan :post-fetched))
         (rc/<! (a/timeout 0))
-        (scroll-to-element-by-id (:heading-id url-info))))))
+        (scroll-to-element-by-id (:heading-id url-info)))
+      (when-let [visiting-post (:visiting-post @state)]
+        (rc/>! res-chan {:type :post-unshow :post-id visiting-post})))))
+
+(defn subscribe-init-app [action-chan res-chan]
+  (rc/go
+    (rc/>! res-chan {:type :posts-fetch})
+    (rc/<! (next-action action-chan :posts-fetched))
+    (rc/<! (on-url-hash-changed action-chan res-chan js/location.hash))
+    (js/window.addEventListener
+     "hashchange"
+     #(on-url-hash-changed action-chan res-chan js/location.hash))))
 
 (defn subscribe-dispatcher [action-chan res-chan]
   (let [mult-action-chan (a/mult action-chan)]
@@ -94,18 +103,14 @@
             [subscribe-init-app
              subscribe-posts-fetch
              subscribe-post-show]]
-      (let [cloned-action-chan (a/tap mult-action-chan (a/chan))]
-        ;; 当一个 subscriber 的 chan 结束以后必须 untap ，否则会阻塞
-        ;; 主 action-chan 的 >! 函数
-        (a/take!
-         (subscribe cloned-action-chan res-chan)
-         #(a/untap mult-action-chan cloned-action-chan))))))
+      (let [cloned-action-chan (a/tap mult-action-chan (a/chan (a/sliding-buffer 1)))]
+        (subscribe cloned-action-chan res-chan)))))
 
 ;; components
 
 (defn BlogPostsTitleItem [post]
   ^{:key (g/id post)}
-  [:li.BlogPostsTitleItem {:on-click #(f/dispatch! @store {:type :post-show :post post})}
+  [:li.BlogPostsTitleItem
    [:a {:className (classnames {:visited (get-in @state [:visited-posts (g/id post)])})
         :href (g/blog-url post)}
     [:time.BlogPostsTitleItem__date (g/date post)]
@@ -126,10 +131,7 @@
         visiting-post (get-in @state [:posts visiting-post-id])]
     [:article.BlogPost
      [:header.BlogPost__header
-      [:a.BlogPost__back-list
-       {:href "#/"
-        :on-click #(f/dispatch! @store {:type :post-unshow :post visiting-post})}
-       [:i.icon-back]]
+      [:a.BlogPost__back-list {:href "#/"} [:i.icon-back]]
       [:h1 (g/title visiting-post)]]
      (if (or (get-in @state [:loading-posts visiting-post-id])
              (not (:content visiting-post)))
