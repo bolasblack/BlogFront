@@ -73,7 +73,7 @@
 (defn scroll-to-element-by-id [elem-id]
   (when-let [elem (js/document.getElementById elem-id)]
     (let [elem-rect (.getBoundingClientRect elem)
-          scroll-top (+ js/document.documentElement.scrollTop elem-rect.top)]
+          scroll-top (+ js/document.scrollingElement.scrollTop elem-rect.top)]
       (js/scrollTo #js {:top scroll-top
                         :behavior "smooth"}))))
 
