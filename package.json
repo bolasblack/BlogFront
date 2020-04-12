@@ -40,7 +40,7 @@
     "normalize.css": "^8.0.0",
     "octokat": "^0.10.0",
     "react": "^16.4.1",
-    "react-dom": "^16.4.1",
+    "react-dom": "^16.4.2",
     "react-dom-server": "^0.0.5",
     "redux": "^4.0.0"
   },
