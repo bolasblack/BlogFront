@@ -98,7 +98,7 @@ html, body {
     h#{$h} {
       position: relative;
 
-      .heading-anchor {
+      .header-anchor {
         @extend %header-title-prefix;
         text-transform: uppercase;
         text-decoration: none;
