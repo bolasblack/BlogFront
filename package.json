@@ -24,7 +24,7 @@
     "reporter": "@start/reporter-verbose"
   },
   "dependencies": {
-    "airtable": "^0.5.2",
+    "airtable": "^0.7.2",
     "aws-sdk": "^2.113.0",
     "create-react-class": "^15.6.3",
     "highlight.js": "^9.12.0",
