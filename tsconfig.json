@@ -6,19 +6,16 @@
     "esModuleInterop": true,
     "noUnusedLocals": true,
     "noImplicitAny": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "sourceMap": true,
     "outDir": "dist",
+    "noEmit": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
-    "removeComments": false,
+    "removeComments": false
   },
-  "include": [
-    "configs/**/*.ts",
-  ],
-  "exclude": [
-    "node_modules/**/*",
-  ],
+  "include": ["vite.config.ts"],
+  "exclude": ["node_modules/**/*"]
 }

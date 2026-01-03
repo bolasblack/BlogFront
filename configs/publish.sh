@@ -2,7 +2,7 @@ if [ ! -d publish_repo ]; then
   git clone --depth=1 git@github.com:bolasblack/bolasblack.github.com.git publish_repo
 fi
 
-yarn build
+pnpm build
 find ./publish_repo -type f ! -path '*/.git/*' -delete
 cp dist/* publish_repo
 

@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import { resolve } from 'path'
-import fs from 'fs'
+import * as fs from 'fs'
 
 const SHADOW_CLJS_OUT_PATH = '.shadow-cljs/browser-out'
 
@@ -13,13 +13,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-      },
-    },
-  },
-  css: {
-    preprocessorOptions: {
-      scss: {
-        api: 'modern-compiler',
       },
     },
   },
