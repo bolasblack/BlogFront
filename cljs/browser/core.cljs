@@ -2,6 +2,7 @@
   (:require
    [cljs.core.async :as a]
    [reagent.core :as r]
+   [reagent.dom.client :as rdomc]
    [rxcljs.core :as rc :include-macros true]
    [browser.utils :refer [dom-ready classnames render-md]]
    [browser.github :as g]
@@ -128,18 +129,19 @@
 
 (defn BlogPost []
   (let [visiting-post-id (:visiting-post @state)
-        visiting-post (get-in @state [:posts visiting-post-id])]
+        visiting-post (get-in @state [:posts visiting-post-id])
+        loading? (get-in @state [:loading-posts visiting-post-id])
+        has-content? (boolean (:content visiting-post))]
     [:article.BlogPost
      [:header.BlogPost__header
       [:a.BlogPost__back-list {:href "#/"} [:i.icon-back]]
       [:h1 (g/title visiting-post)]]
-     (if (or (get-in @state [:loading-posts visiting-post-id])
-             (not (:content visiting-post)))
+     (if (or loading? (not has-content?))
        [:div "Loading..."]
        [:div.BlogPost__md
-        {:dangerously-set-inner-HTML
-         {:__html (render-md (:content visiting-post)
-                             :heading-id-renderer #(g/heading-id visiting-post %))}}])]))
+        {:dangerouslySetInnerHTML
+         (r/unsafe-html (render-md (:content visiting-post)
+                                   :heading-id-renderer #(g/heading-id visiting-post %)))}])]))
 
 (defn App []
   (if (:visiting-post @state)
@@ -165,14 +167,16 @@
                   devtools-enhancer)]
     (reset! store (f/create-store reducer state enhancer))))
 
+(defonce react-root (atom nil))
+
 (defn ^:dev/before-load unmount-root []
-  (r/unmount-component-at-node
-   (js/document.getElementById "app")))
+  (when @react-root
+    (rdomc/unmount @react-root)))
 
 (defn ^:dev/after-load mount-root []
-  (r/render
-   [App]
-   (js/document.getElementById "app")))
+  (when-not @react-root
+    (reset! react-root (rdomc/create-root (js/document.getElementById "app"))))
+  (rdomc/render @react-root [App]))
 
 (if-not @store
   (dom-ready

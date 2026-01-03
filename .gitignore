@@ -18,6 +18,7 @@ node_modules/*
 .nrepl-*
 
 .start-out
+.claude/settings.local.json
 
 public
 dist

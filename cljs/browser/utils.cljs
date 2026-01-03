@@ -30,18 +30,21 @@
   (let [mdit (-> (mdit-generator #js {:html true
                                       :highlight (fn [code lang]
                                                    (try
-                                                     (.-value (hl/highlight lang (s/trim code)))
+                                                     (.-value (hl/highlight (s/trim code) #js {:language lang}))
                                                      (catch js/Error err
                                                        (s/trim code))))})
-                 (.use mdit-anchor #js {:permalink true
-                                        :permalinkSymbol ""
-                                        :permalinkBefore true
-                                        :permalinkHref #(str "#" (heading-id-renderer (js/decodeURIComponent %)))
-                                        :callback (fn [token ctx]
-                                                    (->> (.-slug ctx)
-                                                         (js/decodeURIComponent)
-                                                         (heading-id-renderer)
-                                                         (.attrSet token "id")))})
+                 (.use mdit-anchor
+                       #js {:permalink (mdit-anchor/permalink.linkInsideHeader
+                                        #js {:class "header-anchor"
+                                             :symbol ""
+                                             :ariaHidden true
+                                             :placement "before"
+                                             :renderHref #(str "#" (heading-id-renderer (js/decodeURIComponent %)))})
+                            :callback (fn [token info]
+                                        (->> (.-slug info)
+                                             (js/decodeURIComponent)
+                                             (heading-id-renderer)
+                                             (.attrSet token "id")))})
                  (.use mdit-footnote))
         rules (.. mdit -renderer -rules)
         get-refid (fn [tokens idx options env slf]

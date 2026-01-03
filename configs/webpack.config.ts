@@ -1,12 +1,9 @@
 import fs from 'fs'
 import path from 'path'
-import Sass from 'sass'
 import webpack, { Configuration } from 'webpack'
-import {} from 'webpack-dev-server'
-import CleanWebpackPlugin from 'clean-webpack-plugin'
+import type { Configuration as DevServerConfiguration } from 'webpack-dev-server'
 import CopyWebpackPlugin from 'copy-webpack-plugin'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
-import HtmlWebpackIncludeAssetsPlugin from 'html-webpack-include-assets-plugin'
 
 export const ASSETS_DEST = 'assets'
 
@@ -22,16 +19,20 @@ const packageInfo = JSON.parse(
   fs.readFileSync(path.resolve(__dirname, '../package.json')).toString(),
 )
 
+const devServer: DevServerConfiguration = {
+  port: 12564,
+  static: {
+    directory: path.resolve(__dirname, '../public'),
+  },
+  hot: true,
+}
+
 export const config: Configuration = {
   mode: isDev ? 'development' : 'production',
   context: path.resolve(__dirname, '..'),
   devtool: 'cheap-source-map',
   entry: {
     init: './scripts/init.js',
-  },
-  node: {
-    __filename: true,
-    __dirname: true,
   },
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
@@ -55,7 +56,6 @@ export const config: Configuration = {
             loader: 'sass-loader',
             options: {
               sourceMap: true,
-              implementation: Sass,
             },
           },
         ],
@@ -64,57 +64,40 @@ export const config: Configuration = {
   },
   output: {
     path: path.resolve(__dirname, '../dist'),
-    filename: '[name].[hash].js',
+    filename: '[name].[contenthash].js',
+    clean: true,
   },
   stats: {
     colors: true,
     chunks: false,
     modules: false,
-    maxModules: Infinity,
   },
   plugins: [
-    new CleanWebpackPlugin(['dist'], {
-      root: path.resolve(__dirname, '../'),
-      exclude: ['.gitrepo'],
-      verbose: true,
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: ASSETS_DEST,
+          to: '.',
+          globOptions: {
+            ignore: ['**/index.html'],
+          },
+        },
+        {
+          from: isDev ? SHADOW_CLJS_OUT_PATH : SHADOW_CLJS_OUT_PATH + '/*',
+          to: isDev ? '.' : '[name][ext]',
+        },
+      ],
     }),
-    new CopyWebpackPlugin([{
-      from: ASSETS_DEST,
-      to: '.',
-    }, {
-      from: isDev ? SHADOW_CLJS_OUT_PATH : SHADOW_CLJS_OUT_PATH + '/*',
-      to: isDev ? '.' : '[name].[ext]',
-    }]),
     new HtmlWebpackPlugin({
       template: 'assets/index.html',
       inject: 'head',
-    }),
-    new HtmlWebpackIncludeAssetsPlugin({
-      assets: [{
-        path: '',
-        glob: '*.css',
-        globPath: ASSETS_DEST,
-      }],
-      hash: true,
-      append: false,
-    }),
-    new HtmlWebpackIncludeAssetsPlugin({
-      assets: [{
-        path: '',
-        glob: '*.js',
-        globPath: SHADOW_CLJS_OUT_PATH,
-      }],
-      hash: true,
-      append: true,
+      scriptLoading: 'blocking',
     }),
     new webpack.DefinePlugin({
       APP_VERSION: `"${packageInfo.version}"`,
     }),
   ],
-  devServer: {
-    port: 12564,
-    contentBase: path.resolve(__dirname, '../public'),
-  },
+  devServer,
 }
 
 export default config

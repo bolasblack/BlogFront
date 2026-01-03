@@ -1,6 +1,7 @@
-@import "../node_modules/normalize.css/normalize";
-@import "../node_modules/highlight.js/styles/solarized-light";
-@import "./breakpoints";
+@use "sass:color";
+@use "../node_modules/normalize.css/normalize";
+@use "../node_modules/highlight.js/styles/github.css";
+@use "./breakpoints" as *;
 
 $line-height: 1.8;
 $container-vertical-margin: 80px;
@@ -50,8 +51,8 @@ html, body {
   cursor: pointer;
 
   $link-color: #333;
-  $link-color-active: lighten($link-color, 30%);
-  $link-color-visited: lighten($link-color, 50%);
+  $link-color-active: color.adjust($link-color, $lightness: 30%);
+  $link-color-visited: color.adjust($link-color, $lightness: 50%);
 
   &:hover > a {
     border-bottom: 1px solid $link-color;

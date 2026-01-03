@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm outdated:*)",
+      "Bash(pnpm import:*)",
+      "Bash(pnpm install)",
+      "WebSearch",
+      "WebFetch",
+      "Fetch",
+      "Bash(pnpm shadow-cljs compile browser:*)",
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(git add:*)",
+      "Bash(pnpm webpack-dev-server:*)",
+      "mcp__chrome-devtools__*",
+      "mcp__github__get_*",
+      "mcp__github__search_*",
+      "mcp__github__list_*"
+    ]
+  }
+}

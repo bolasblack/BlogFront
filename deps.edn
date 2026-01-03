@@ -1,13 +1,13 @@
 {:paths ["cljs"]
  :deps
  {rxcljs {:git/url "https://github.com/bolasblack/rxcljs"
-          :sha "84ed50cdf1ff3e4ae2b5e81aba3b658d25ea159f"}
-  reagent {:mvn/version "0.8.1"
-           :exclusions [cljsjs/react
-                        cljsjs/react-dom
-                        cljsjs/react-dom-server
-                        cljsjs/create-react-class]}
-  thheller/shadow-cljs {:mvn/version "2.8.94"}}
+          :sha "96d13a6118137353d6d038e89d206ed6f3dee4b8"}
+  reagent/reagent {:mvn/version "2.0.1"
+                   :exclusions [cljsjs/react
+                                cljsjs/react-dom
+                                cljsjs/react-dom-server
+                                cljsjs/create-react-class]}
+  thheller/shadow-cljs {:mvn/version "3.2.1"}}
  :aliases
- {:nrepl {:extra-deps {cider/cider-nrepl {:mvn/version "0.21.1"}}}
+ {:nrepl {:extra-deps {cider/cider-nrepl {:mvn/version "0.58.0"}}}
   :shadow-cljs {:main-opts ["-m" "shadow.cljs.devtools.cli"]}}}

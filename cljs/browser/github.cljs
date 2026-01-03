@@ -61,22 +61,21 @@
                  map->Post)
         post (if (nil? content)
                post
-               (let [[meta-str content] (->> (s/split content #"(?m)^-+$" 3)
-                                             next
-                                             (map s/trim))
-                     meta (js->clj (js-yaml/safeLoad meta-str) :keywordize-keys true)]
+               (let [[meta-str post-content] (->> (s/split content #"(?m)^-+$" 3)
+                                                  next
+                                                  (map s/trim))
+                     meta (js->clj (js-yaml/load meta-str) :keywordize-keys true)]
                  (-> post
                      (assoc :title (:title meta))
-                     (assoc :content content))))]
+                     (assoc :content post-content))))]
     post))
 
 (defn get-post [post]
   (rc/go-let [raw-post (rt/<p! (-> (.contents repo (:path post))
-                                   (.fetch)))]
-    (parse-post-content
-     raw-post
-     (when (= (.-encoding raw-post) "base64")
-       (rt/<p! (.read raw-post))))))
+                                   (.fetch)))
+              content (when (= (.-encoding raw-post) "base64")
+                        (rt/<p! (.read raw-post)))]
+    (parse-post-content raw-post content)))
 
 (defn parse-post-heading-id
   "str -> nil | {:post-id str :heading str :heading-id str}"
