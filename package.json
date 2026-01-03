@@ -4,11 +4,11 @@
   "description": "My GitHub blog front",
   "main": "",
   "scripts": {
-    "webpack-dev-server": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json node --require ts-node/register ./node_modules/webpack-cli/bin/cli.js serve --config ./configs/webpack.config.ts",
-    "webpack": "TS_NODE_FILES=true TS_NODE_PROJECT=./configs/tsconfig.node.json node --require ts-node/register ./node_modules/webpack-cli/bin/cli.js --config ./configs/webpack.config.ts",
+    "dev": "vite",
+    "vite-build": "vite build",
     "shadow-cljs": "clj -A:shadow-cljs",
-    "start": "TMUX= tmux -f '' -S /tmp/BlogFront-tmux.sock new-session \\; split-window -h \\; select-pane -t %0 \\; send-keys C-m \\; send-keys 'pnpm webpack-dev-server' C-m \\; select-pane -t %1 \\; send-keys 'pnpm shadow-cljs watch browser -A:nrepl' C-m",
-    "build": "pnpm shadow-cljs release browser && NODE_ENV=production pnpm webpack",
+    "start": "TMUX= tmux -f '' -S /tmp/BlogFront-tmux.sock new-session \\; split-window -h \\; select-pane -t %0 \\; send-keys C-m \\; send-keys 'pnpm dev' C-m \\; select-pane -t %1 \\; send-keys 'pnpm shadow-cljs watch browser -A:nrepl' C-m",
+    "build": "pnpm shadow-cljs release browser && pnpm vite-build",
     "p": "./configs/publish.sh"
   },
   "githubBlogRepo": "bolasblack/bolasblack.github.com",
@@ -29,19 +29,10 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.29",
-    "shadow-cljs": "^2.28.23",
-    "clean-webpack-plugin": "^4.0.0",
-    "copy-webpack-plugin": "^13.0.1",
-    "css-loader": "^7.1.2",
-    "html-webpack-plugin": "^5.6.5",
     "js-yaml": "^4.1.1",
     "sass": "^1.97.1",
-    "sass-loader": "^16.0.6",
-    "style-loader": "^4.0.0",
-    "ts-node": "^10.9.2",
+    "shadow-cljs": "^2.28.23",
     "typescript": "^5.9.3",
-    "webpack": "^5.104.1",
-    "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.2"
+    "vite": "^7.3.0"
   }
 }
