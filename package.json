@@ -5,10 +5,8 @@
   "main": "",
   "scripts": {
     "dev": "vite",
-    "vite-build": "vite build",
-    "shadow-cljs": "clj -A:shadow-cljs",
-    "start": "TMUX= tmux -f '' -S /tmp/BlogFront-tmux.sock new-session \\; split-window -h \\; select-pane -t %0 \\; send-keys C-m \\; send-keys 'pnpm dev' C-m \\; select-pane -t %1 \\; send-keys 'pnpm shadow-cljs watch browser -A:nrepl' C-m",
-    "build": "pnpm shadow-cljs release browser && pnpm vite-build",
+    "build": "vite build",
+    "shadow-cljs": "clj -M:shadow-cljs",
     "p": "./configs/publish.sh"
   },
   "githubBlogRepo": "bolasblack/bolasblack.github.com",
@@ -29,7 +27,9 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.29",
+    "edn-data": "^1.1.2",
     "js-yaml": "^4.1.1",
+    "picocolors": "^1.1.1",
     "sass": "^1.97.1",
     "shadow-cljs": "^2.28.23",
     "typescript": "^5.9.3",
