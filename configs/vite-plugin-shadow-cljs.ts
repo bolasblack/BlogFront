@@ -132,7 +132,17 @@ function spawnAsync(
     proc.on("close", (code) =>
       code === 0 ? resolve() : reject(new Error(`Exit code: ${code}`))
     );
-    proc.on("error", reject);
+    proc.on("error", (err) => {
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+        reject(
+          new Error(
+            `"${cmd}" not found. Install shadow-cljs as a dependency and run vite via npm/pnpm.`
+          )
+        );
+      } else {
+        reject(err);
+      }
+    });
   });
 }
 
@@ -164,7 +174,9 @@ function pipeProcessOutput(proc: ChildProcess): void {
 
 function injectScripts(html: string, scripts: string[]): string {
   if (scripts.length === 0) return html;
-  const tags = scripts.map((src) => `<script src="${src}"></script>`).join("\n    ");
+  const tags = scripts
+    .map((src) => `<script src="${src}"></script>`)
+    .join("\n    ");
   return html.replace("</body>", `    ${tags}\n  </body>`);
 }
 
@@ -227,7 +239,7 @@ export function shadowCljs(options: ShadowCljsOptions): PluginOption[] {
         const { projectRoot, assetsDir, buildConfigs } = getContext();
 
         console.log(`${TAG} Running shadow-cljs release...`);
-        await spawnAsync("clj", ["-M:shadow-cljs", "release", ...buildIds], {
+        await spawnAsync("shadow-cljs", ["release", ...buildIds], {
           stdio: "inherit",
           cwd: projectRoot,
         });
@@ -241,7 +253,10 @@ export function shadowCljs(options: ShadowCljsOptions): PluginOption[] {
         order: "post",
         handler(html, ctx) {
           const scripts = Object.entries(ctx.bundle ?? {})
-            .filter(([, asset]) => asset.type === "asset" && asset.name?.endsWith(CLJS_JS_SUFFIX))
+            .filter(
+              ([fileName, asset]) =>
+                asset.type === "asset" && fileName.includes(CLJS_JS_SUFFIX)
+            )
             .map(([fileName]) => `/${fileName}`);
           return injectScripts(html, scripts);
         },
@@ -255,15 +270,20 @@ export function shadowCljs(options: ShadowCljsOptions): PluginOption[] {
 
       transformIndexHtml(html) {
         const { buildConfigs } = getContext();
-        const modules = Array.from(buildConfigs.values()).flatMap((c) => c.modules);
-        return injectScripts(html, modules.map((m) => `/${m}.js`));
+        const modules = Array.from(buildConfigs.values()).flatMap(
+          (c) => c.modules
+        );
+        return injectScripts(
+          html,
+          modules.map((m) => `/${m}.js`)
+        );
       },
 
       configureServer(server) {
         const { projectRoot, buildConfigs } = getContext();
 
         console.log(`${TAG} Starting shadow-cljs watch...`);
-        shadowProcess = spawn("clj", ["-M:shadow-cljs", "watch", ...buildIds], {
+        shadowProcess = spawn("shadow-cljs", ["watch", ...buildIds], {
           stdio: ["ignore", "pipe", "pipe"],
           cwd: projectRoot,
         });
@@ -288,7 +308,14 @@ export function shadowCljs(options: ShadowCljsOptions): PluginOption[] {
 // ============================================================================
 
 async function emitBuildAssets(
-  this: { emitFile: (file: { type: "asset"; name?: string; fileName?: string; source: string | Buffer }) => void },
+  this: {
+    emitFile: (file: {
+      type: "asset";
+      name?: string;
+      fileName?: string;
+      source: string | Buffer;
+    }) => void;
+  },
   projectRoot: string,
   assetsDir: string,
   buildConfig: BuildConfig
@@ -330,7 +357,11 @@ function createDevMiddleware(
   projectRoot: string,
   buildConfigs: Map<string, BuildConfig>
 ) {
-  return async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+  return async (
+    req: IncomingMessage,
+    res: ServerResponse,
+    next: () => void
+  ) => {
     const match = req.url?.match(/^\/([^?]+\.js)(?:\?|$)/);
     if (!match) {
       return next();
@@ -338,7 +369,11 @@ function createDevMiddleware(
 
     const requestedFile = match[1];
     for (const buildConfig of buildConfigs.values()) {
-      const filePath = resolve(projectRoot, buildConfig.outputDir, requestedFile);
+      const filePath = resolve(
+        projectRoot,
+        buildConfig.outputDir,
+        requestedFile
+      );
       try {
         await fs.stat(filePath);
         res.setHeader("Content-Type", "application/javascript");

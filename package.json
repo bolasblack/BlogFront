@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "shadow-cljs": "clj -M:shadow-cljs",
     "p": "./configs/publish.sh"
   },
   "githubBlogRepo": "bolasblack/bolasblack.github.com",
@@ -31,6 +30,7 @@
     "edn-data": "^1.1.2",
     "picocolors": "^1.1.1",
     "sass": "^1.97.1",
+    "shadow-cljs": "^3.3.4",
     "typescript": "^5.9.3",
     "vite": "^7.3.0"
   }
