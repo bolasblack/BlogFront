@@ -109,6 +109,31 @@
       (js/scrollTo #js {:top scroll-top
                         :behavior "smooth"}))))
 
+;; Navigation history tracking (persists across refresh via history.state)
+;; Uses sessionStorage as bridge between history entries
+
+(defn get-nav-depth []
+  (or (when js/history.state (aget js/history.state "blog-nav-depth")) 0))
+
+(defn update-nav-depth! []
+  (if (and js/history.state (aget js/history.state "blog-nav-depth"))
+    ;; Back navigation or refresh - restore from history state
+    (js/sessionStorage.setItem "blog-current-depth"
+                               (aget js/history.state "blog-nav-depth"))
+    ;; Forward navigation - increment and save
+    (let [current-depth (js/parseInt
+                         (or (js/sessionStorage.getItem "blog-current-depth") "0")
+                         10)
+          new-depth (inc current-depth)]
+      (js/sessionStorage.setItem "blog-current-depth" new-depth)
+      (js/history.replaceState #js {:blog-nav-depth new-depth} ""))))
+
+(defn go-back! [e]
+  (.preventDefault e)
+  (if (> (get-nav-depth) 1)
+    (js/history.back)
+    (set! js/location.hash "#/")))
+
 (defn on-url-hash-changed [action-chan res-chan hash]
   (rc/go
     (let [route (g/parse-url-hash hash)]
@@ -141,10 +166,13 @@
   (rc/go
     (rc/>! res-chan {:type :posts-fetch})
     (rc/<! (next-action action-chan :posts-fetched))
+    (update-nav-depth!)
     (rc/<! (on-url-hash-changed action-chan res-chan js/location.hash))
     (js/window.addEventListener
      "hashchange"
-     #(on-url-hash-changed action-chan res-chan js/location.hash))))
+     (fn []
+       (update-nav-depth!)
+       (on-url-hash-changed action-chan res-chan js/location.hash)))))
 
 (defn subscribe-dispatcher [action-chan res-chan]
   (let [mult-action-chan (a/mult action-chan)]
@@ -196,11 +224,11 @@
     [:div.BlogPost__meta {:role "contentinfo" :aria-label "文章信息"}
      (when created
        [:span.BlogPost__meta-dates
-        [:time.BlogPost__meta-created {:dateTime (format-date created)}
-         (str "创建于 " (format-date created))]
+        [:time {:dateTime (format-date created)} (format-date created)]
         (when dates-differ?
-          [:time.BlogPost__meta-updated {:dateTime (format-date updated)}
-           (str " · 更新于 " (format-date updated))])])
+          [:<>
+           [:span.BlogPost__meta-arrow " → "]
+           [:time {:dateTime (format-date updated)} (format-date updated)]])])
      (when (seq tags)
        [:ul.BlogPost__meta-tags {:aria-label "标签"}
         (for [tag tags]
@@ -219,7 +247,8 @@
     [:article.BlogPost {:aria-busy is-loading?}
      [:header.BlogPost__header
       [:a.BlogPost__back-list {:href "#/"
-                               :aria-label "返回文章列表"}
+                               :on-click go-back!
+                               :aria-label "返回"}
        [:i.icon-back {:aria-hidden "true"}]]
       [:h1 (g/title visiting-post)]
       [BlogPostMeta visiting-post]]
@@ -237,7 +266,8 @@
     [:section.TagPosts {:aria-label (str "标签 " tag " 的文章")}
      [:header.TagPosts__header
       [:a.TagPosts__back {:href "#/"
-                          :aria-label "返回文章列表"}
+                          :on-click go-back!
+                          :aria-label "返回"}
        [:i.icon-back {:aria-hidden "true"}]]
       [:h1.TagPosts__title (str "#" tag)]]
      (if loading?
