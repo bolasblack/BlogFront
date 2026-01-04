@@ -6,6 +6,7 @@
    [rxcljs.core :as rc :include-macros true]
    [browser.utils :refer [dom-ready classnames render-md]]
    [browser.github :as g]
+   [browser.theme :as theme]
    [redux.core :as f]
    [redux.chan-middleware :refer [chan-middleware next-action]]
    [redux-map-action.core :as rm]))
@@ -144,9 +145,11 @@
                                    :heading-id-renderer #(g/heading-id visiting-post %)))}])]))
 
 (defn App []
-  (if (:visiting-post @state)
-    [BlogPost]
-    [BlogPosts]))
+  [:<>
+   [theme/ThemeToggle]
+   (if (:visiting-post @state)
+     [BlogPost]
+     [BlogPosts])])
 
 ;; initialize
 
@@ -181,5 +184,6 @@
 (if-not @store
   (dom-ready
    (fn []
+     (theme/init-theme!)
      (create-store!)
      (mount-root))))

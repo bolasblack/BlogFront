@@ -1,37 +1,229 @@
 @use "sass:color";
 @use "../node_modules/normalize.css/normalize";
-@use "../node_modules/highlight.js/styles/github.css";
 @use "./breakpoints" as *;
 
-$line-height: 1.8;
-$container-vertical-margin: 80px;
-$container-width: 600px;
+// ============================================================================
+// Design Tokens - CSS Variables
+// ============================================================================
+
+:root {
+  // Layout
+  --line-height: 1.8;
+  --container-vertical-margin: 80px;
+  --container-width: 600px;
+
+  // Transition
+  --theme-transition: 280ms ease-out;
+
+  // Light Theme (default)
+  --color-bg: #faf9f7;
+  --color-bg-elevated: #ffffff;
+  --color-bg-code: #f3f4f5;
+  --color-text: #2d2d2d;
+  --color-text-muted: #6b6b6b;
+  --color-text-faint: #9a9a9a;
+  --color-link: #3d3d3d;
+  --color-link-visited: #8a8a8a;
+  --color-border: #e0deda;
+  --color-accent: #b8860b;
+  --color-selection-bg: rgba(184, 134, 11, 0.15);
+
+  // Code highlighting (GitHub Light compatible)
+  --hljs-bg: #f6f8fa;
+  --hljs-text: #24292e;
+  --hljs-comment: #6a737d;
+  --hljs-keyword: #d73a49;
+  --hljs-string: #032f62;
+  --hljs-number: #005cc5;
+  --hljs-function: #6f42c1;
+  --hljs-variable: #e36209;
+}
+
+// Dark Theme
+[data-theme="dark"] {
+  --color-bg: #161616;
+  --color-bg-elevated: #1e1e1e;
+  --color-bg-code: #252525;
+  --color-text: #e4e2df;
+  --color-text-muted: #a8a8a8;
+  --color-text-faint: #6e6e6e;
+  --color-link: #d4d2cf;
+  --color-link-visited: #7a7a7a;
+  --color-border: #333333;
+  --color-accent: #d4a853;
+  --color-selection-bg: rgba(212, 168, 83, 0.2);
+
+  // Code highlighting (GitHub Dark compatible)
+  --hljs-bg: #1e1e1e;
+  --hljs-text: #e1e4e8;
+  --hljs-comment: #6a737d;
+  --hljs-keyword: #f97583;
+  --hljs-string: #9ecbff;
+  --hljs-number: #79b8ff;
+  --hljs-function: #b392f0;
+  --hljs-variable: #ffab70;
+}
+
+// System preference (when no explicit theme set)
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-bg: #161616;
+    --color-bg-elevated: #1e1e1e;
+    --color-bg-code: #252525;
+    --color-text: #e4e2df;
+    --color-text-muted: #a8a8a8;
+    --color-text-faint: #6e6e6e;
+    --color-link: #d4d2cf;
+    --color-link-visited: #7a7a7a;
+    --color-border: #333333;
+    --color-accent: #d4a853;
+    --color-selection-bg: rgba(212, 168, 83, 0.2);
+
+    --hljs-bg: #1e1e1e;
+    --hljs-text: #e1e4e8;
+    --hljs-comment: #6a737d;
+    --hljs-keyword: #f97583;
+    --hljs-string: #9ecbff;
+    --hljs-number: #79b8ff;
+    --hljs-function: #b392f0;
+    --hljs-variable: #ffab70;
+  }
+}
+
+// ============================================================================
+// Base Styles
+// ============================================================================
 
 * {
   box-sizing: border-box;
+}
+
+::selection {
+  background: var(--color-selection-bg);
 }
 
 i {
   font-style: normal;
 }
 
+html {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  transition:
+    background-color var(--theme-transition),
+    color var(--theme-transition);
+}
+
 html, body {
   margin: 0;
   padding: 0;
   font-size: 18px;
-  line-height: $line-height;
+  line-height: var(--line-height);
 }
+
+body {
+  background-color: var(--color-bg);
+}
+
+a {
+  color: var(--color-link);
+  transition: color var(--theme-transition);
+
+  &:visited {
+    color: var(--color-link-visited);
+  }
+}
+
+// ============================================================================
+// Layout
+// ============================================================================
 
 %container {
   display: block;
-  margin: $container-vertical-margin auto;
-  max-width: $container-width;
+  margin: var(--container-vertical-margin) auto;
+  max-width: var(--container-width);
 
   @include breakpoint-down($breakpoint-sm) {
     margin: 0 auto;
     padding: 10px 20px;
   }
 }
+
+// ============================================================================
+// Theme Toggle
+// ============================================================================
+
+.ThemeToggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--color-text-muted);
+  transition:
+    background-color var(--theme-transition),
+    border-color var(--theme-transition),
+    color var(--theme-transition),
+    box-shadow 200ms ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  &:hover {
+    color: var(--color-text);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  @include breakpoint-down($breakpoint-sm) {
+    top: auto;
+    bottom: 80px;
+    right: 20px;
+    padding: 10px;
+
+    &__label {
+      display: none;
+    }
+  }
+
+  &__icon {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  // Sun icon (for switching to light)
+  &__sun,
+  &__moon,
+  &__auto {
+    display: none;
+  }
+
+  // Show appropriate icon based on theme
+  [data-theme="dark"] &__sun {
+    display: block;
+  }
+
+  [data-theme="light"] &__moon {
+    display: block;
+  }
+
+  :root:not([data-theme]) &__auto,
+  [data-theme="system"] &__auto {
+    display: block;
+  }
+}
+
+// ============================================================================
+// Blog Posts List
+// ============================================================================
 
 .BlogPosts {
   @extend %container;
@@ -50,30 +242,33 @@ html, body {
   margin: 6px 0;
   cursor: pointer;
 
-  $link-color: #333;
-  $link-color-active: color.adjust($link-color, $lightness: 30%);
-  $link-color-visited: color.adjust($link-color, $lightness: 50%);
-
   &:hover > a {
-    border-bottom: 1px solid $link-color;
+    border-bottom: 1px solid var(--color-link);
   }
+
   > a {
-    color: $link-color;
+    color: var(--color-link);
     text-decoration: none;
+    transition:
+      color var(--theme-transition),
+      border-color var(--theme-transition);
 
     &:active, &.active {
-      color: $link-color-active;
-      border-bottom-color: $link-color-active;
+      color: var(--color-accent);
+      border-bottom-color: var(--color-accent);
     }
 
     &:visited, &.visited {
-      color: $link-color-visited;
-      border-bottom-color: $link-color-visited;
+      color: var(--color-link-visited);
+      border-bottom-color: var(--color-link-visited);
     }
   }
 
   &__date {
-    font-family: monospace;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    transition: color var(--theme-transition);
   }
 
   &__title {
@@ -84,6 +279,10 @@ html, body {
   }
 }
 
+// ============================================================================
+// Blog Post Article
+// ============================================================================
+
 .BlogPost {
   @extend %container;
   overflow-wrap: break-word;
@@ -92,7 +291,8 @@ html, body {
     position: absolute;
     margin-left: -10px;
     transform: scale(0.8, 0.8) translate(-100%, 0);
-    color: #aaa;
+    color: var(--color-text-faint);
+    transition: color var(--theme-transition);
   }
 
   @for $h from 1 through 6 {
@@ -118,11 +318,11 @@ html, body {
       }
     }
   }
+
   h2, h3, h4, h5, h6 {
     margin: 20px 0 0 0;
   }
 
-  // from https://assets-cdn.github.com/assets/github-5043b3d96d50b119b971c2cdde4e0a62.css
   h1 { font-size: 2rem; }
   h2 { font-size: 1.5rem; }
   h3 { font-size: 1.25rem; }
@@ -133,10 +333,12 @@ html, body {
   &__header h1::before {
     content: '';
   }
+
   &__header {
     position: relative;
     line-height: 1.4;
   }
+
   &__back-list {
     @extend %header-title-prefix;
     margin-left: -10px;
@@ -144,6 +346,9 @@ html, body {
     font-size: 2rem;
     border-radius: 50px;
     cursor: pointer;
+    transition:
+      background-color 200ms ease,
+      color var(--theme-transition);
 
     @include breakpoint-down($breakpoint-sm) {
       .BlogPost & {
@@ -154,12 +359,14 @@ html, body {
         z-index: 2;
         margin-left: 0;
         transform: none;
-        background: #00000090;
+        background: var(--color-bg-elevated);
+        border: 1px solid var(--color-border);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
       }
     }
 
     &:hover {
-      background: #eee;
+      background: var(--color-bg-code);
     }
 
     .icon-back {
@@ -167,25 +374,166 @@ html, body {
       display: block;
       font-size: 0;
     }
+
     .icon-back::before {
-      content: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 89 96" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M86.612 2.39771C83.8783 -0.33596 79.4461 -0.33596 76.7125 2.39771L36.4089 42.7012L36.4074 42.7028C36.0657 43.0445 35.7667 43.4127 35.5104 43.8009C33.7164 46.518 34.0154 50.2103 36.4074 52.6023L36.4085 52.6034L76.7125 92.9074C79.4461 95.641 83.8783 95.641 86.612 92.9074C89.3456 90.1737 89.3456 85.7415 86.612 83.0079L51.2566 47.6525L86.612 12.2972C89.3456 9.56353 89.3456 5.13138 86.612 2.39771ZM43.0079 3.1023C45.7416 0.36863 50.1737 0.36863 52.9074 3.1023C55.641 5.83597 55.641 10.2681 52.9074 13.0018L17.552 48.3571L52.9074 83.7125C55.641 86.4461 55.641 90.8783 52.9074 93.612C50.1737 96.3456 45.7416 96.3456 43.0079 93.612L2.7028 53.3069C-0.0308714 50.5732 -0.0308714 46.1411 2.7028 43.4074L43.0079 3.1023Z" fill="%23C4C4C4"/></svg>');
+      content: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 89 96" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M86.612 2.39771C83.8783 -0.33596 79.4461 -0.33596 76.7125 2.39771L36.4089 42.7012L36.4074 42.7028C36.0657 43.0445 35.7667 43.4127 35.5104 43.8009C33.7164 46.518 34.0154 50.2103 36.4074 52.6023L36.4085 52.6034L76.7125 92.9074C79.4461 95.641 83.8783 95.641 86.612 92.9074C89.3456 90.1737 89.3456 85.7415 86.612 83.0079L51.2566 47.6525L86.612 12.2972C89.3456 9.56353 89.3456 5.13138 86.612 2.39771ZM43.0079 3.1023C45.7416 0.36863 50.1737 0.36863 52.9074 3.1023C55.641 5.83597 55.641 10.2681 52.9074 13.0018L17.552 48.3571L52.9074 83.7125C55.641 86.4461 55.641 90.8783 52.9074 93.612C50.1737 96.3456 45.7416 96.3456 43.0079 93.612L2.7028 53.3069C-0.0308714 50.5732 -0.0308714 46.1411 2.7028 43.4074L43.0079 3.1023Z" fill="%239a9a9a"/></svg>');
+
+      [data-theme="dark"] & {
+        content: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 89 96" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M86.612 2.39771C83.8783 -0.33596 79.4461 -0.33596 76.7125 2.39771L36.4089 42.7012L36.4074 42.7028C36.0657 43.0445 35.7667 43.4127 35.5104 43.8009C33.7164 46.518 34.0154 50.2103 36.4074 52.6023L36.4085 52.6034L76.7125 92.9074C79.4461 95.641 83.8783 95.641 86.612 92.9074C89.3456 90.1737 89.3456 85.7415 86.612 83.0079L51.2566 47.6525L86.612 12.2972C89.3456 9.56353 89.3456 5.13138 86.612 2.39771ZM43.0079 3.1023C45.7416 0.36863 50.1737 0.36863 52.9074 3.1023C55.641 5.83597 55.641 10.2681 52.9074 13.0018L17.552 48.3571L52.9074 83.7125C55.641 86.4461 55.641 90.8783 52.9074 93.612C50.1737 96.3456 45.7416 96.3456 43.0079 93.612L2.7028 53.3069C-0.0308714 50.5732 -0.0308714 46.1411 2.7028 43.4074L43.0079 3.1023Z" fill="%236e6e6e"/></svg>');
+      }
     }
   }
 
+  // Code blocks
   &__md pre,
   code {
     font-size: 0.8rem;
-    background: #f3f5f6;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    background: var(--color-bg-code);
+    transition: background-color var(--theme-transition);
   }
+
   code {
-    padding: 2px 4px;
+    padding: 2px 6px;
+    border-radius: 4px;
   }
+
   &__md pre {
-    padding: 10px;
+    padding: 16px;
     overflow: auto;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    transition:
+      background-color var(--theme-transition),
+      border-color var(--theme-transition);
 
     code {
       padding: 0;
+      background: transparent;
     }
   }
+
+  // Markdown content styling
+  &__md {
+    // Blockquotes
+    blockquote {
+      margin: 16px 0;
+      padding: 0 16px;
+      border-left: 4px solid var(--color-accent);
+      color: var(--color-text-muted);
+      transition:
+        border-color var(--theme-transition),
+        color var(--theme-transition);
+    }
+
+    // Horizontal rules
+    hr {
+      border: none;
+      border-top: 1px solid var(--color-border);
+      margin: 24px 0;
+      transition: border-color var(--theme-transition);
+    }
+
+    // Tables
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 16px 0;
+    }
+
+    th, td {
+      padding: 8px 12px;
+      border: 1px solid var(--color-border);
+      transition: border-color var(--theme-transition);
+    }
+
+    th {
+      background: var(--color-bg-code);
+      transition: background-color var(--theme-transition);
+    }
+
+    // Images
+    img {
+      max-width: 100%;
+      border-radius: 4px;
+    }
+  }
+}
+
+// ============================================================================
+// Syntax Highlighting (Custom theme based on CSS variables)
+// ============================================================================
+
+.hljs {
+  background: var(--hljs-bg) !important;
+  color: var(--hljs-text);
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: var(--hljs-comment);
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-addition {
+  color: var(--hljs-keyword);
+}
+
+.hljs-string,
+.hljs-meta .hljs-string,
+.hljs-doctag,
+.hljs-regexp {
+  color: var(--hljs-string);
+}
+
+.hljs-number,
+.hljs-literal,
+.hljs-bullet,
+.hljs-link {
+  color: var(--hljs-number);
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-title.function_ {
+  color: var(--hljs-function);
+}
+
+.hljs-variable,
+.hljs-template-variable,
+.hljs-attr,
+.hljs-attribute {
+  color: var(--hljs-variable);
+}
+
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-tag {
+  color: var(--hljs-keyword);
+}
+
+.hljs-type,
+.hljs-class .hljs-title,
+.hljs-built_in {
+  color: var(--hljs-variable);
+}
+
+.hljs-deletion {
+  color: var(--hljs-keyword);
+  background-color: rgba(255, 0, 0, 0.1);
+}
+
+.hljs-addition {
+  background-color: rgba(0, 255, 0, 0.1);
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
 }
