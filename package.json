@@ -16,6 +16,7 @@
   "dependencies": {
     "create-react-class": "^15.7.0",
     "highlight.js": "^11.11.1",
+    "js-yaml": "^4.1.1",
     "markdown-it": "^14.1.0",
     "markdown-it-anchor": "^9.2.0",
     "markdown-it-footnote": "^4.0.0",
@@ -28,10 +29,8 @@
   "devDependencies": {
     "@types/node": "^22.15.29",
     "edn-data": "^1.1.2",
-    "js-yaml": "^4.1.1",
     "picocolors": "^1.1.1",
     "sass": "^1.97.1",
-    "shadow-cljs": "^2.28.23",
     "typescript": "^5.9.3",
     "vite": "^7.3.0"
   }
