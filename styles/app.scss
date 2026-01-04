@@ -26,6 +26,7 @@
   --color-link-visited: #8a8a8a;
   --color-border: #e0deda;
   --color-accent: #b8860b;
+  --color-accent-muted: rgba(184, 134, 11, 0.12);
   --color-selection-bg: rgba(184, 134, 11, 0.15);
 
   // Code highlighting (GitHub Light compatible)
@@ -51,6 +52,7 @@
   --color-link-visited: #7a7a7a;
   --color-border: #333333;
   --color-accent: #d4a853;
+  --color-accent-muted: rgba(212, 168, 83, 0.15);
   --color-selection-bg: rgba(212, 168, 83, 0.2);
 
   // Code highlighting (GitHub Dark compatible)
@@ -77,6 +79,7 @@
     --color-link-visited: #7a7a7a;
     --color-border: #333333;
     --color-accent: #d4a853;
+    --color-accent-muted: rgba(212, 168, 83, 0.15);
     --color-selection-bg: rgba(212, 168, 83, 0.2);
 
     --hljs-bg: #1e1e1e;
@@ -385,6 +388,50 @@ a {
     }
   }
 
+  // Post metadata
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    transition: color var(--theme-transition);
+  }
+
+  &__meta-dates {
+    display: flex;
+    align-items: center;
+  }
+
+  &__meta-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__meta-tag {
+    a {
+      color: var(--color-accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      opacity: 0.7;
+      transition: opacity 200ms ease;
+
+      &:visited {
+        color: var(--color-accent);
+      }
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
   // Code blocks
   &__md pre,
   code {
@@ -458,6 +505,83 @@ a {
       max-width: 100%;
       border-radius: 4px;
     }
+  }
+}
+
+// ============================================================================
+// Tag Posts List
+// ============================================================================
+
+.TagPosts {
+  @extend %container;
+
+  &__header {
+    position: relative;
+    margin-bottom: 24px;
+    line-height: 1.4;
+  }
+
+  &__back {
+    position: absolute;
+    margin-left: -10px;
+    transform: scale(0.8, 0.8) translate(-100%, 0);
+    color: var(--color-text-faint);
+    padding: 14px 15px 14px 13px;
+    font-size: 2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition:
+      background-color 200ms ease,
+      color var(--theme-transition);
+
+    @include breakpoint-down($breakpoint-sm) {
+      position: fixed;
+      top: auto;
+      bottom: 20px;
+      right: 20px;
+      z-index: 2;
+      margin-left: 0;
+      transform: none;
+      background: var(--color-bg-elevated);
+      border: 1px solid var(--color-border);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    &:hover {
+      background: var(--color-bg-code);
+    }
+
+    .icon-back {
+      position: relative;
+      display: block;
+      font-size: 0;
+    }
+
+    .icon-back::before {
+      content: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 89 96" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M86.612 2.39771C83.8783 -0.33596 79.4461 -0.33596 76.7125 2.39771L36.4089 42.7012L36.4074 42.7028C36.0657 43.0445 35.7667 43.4127 35.5104 43.8009C33.7164 46.518 34.0154 50.2103 36.4074 52.6023L36.4085 52.6034L76.7125 92.9074C79.4461 95.641 83.8783 95.641 86.612 92.9074C89.3456 90.1737 89.3456 85.7415 86.612 83.0079L51.2566 47.6525L86.612 12.2972C89.3456 9.56353 89.3456 5.13138 86.612 2.39771ZM43.0079 3.1023C45.7416 0.36863 50.1737 0.36863 52.9074 3.1023C55.641 5.83597 55.641 10.2681 52.9074 13.0018L17.552 48.3571L52.9074 83.7125C55.641 86.4461 55.641 90.8783 52.9074 93.612C50.1737 96.3456 45.7416 96.3456 43.0079 93.612L2.7028 53.3069C-0.0308714 50.5732 -0.0308714 46.1411 2.7028 43.4074L43.0079 3.1023Z" fill="%239a9a9a"/></svg>');
+
+      [data-theme="dark"] & {
+        content: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 89 96" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M86.612 2.39771C83.8783 -0.33596 79.4461 -0.33596 76.7125 2.39771L36.4089 42.7012L36.4074 42.7028C36.0657 43.0445 35.7667 43.4127 35.5104 43.8009C33.7164 46.518 34.0154 50.2103 36.4074 52.6023L36.4085 52.6034L76.7125 92.9074C79.4461 95.641 83.8783 95.641 86.612 92.9074C89.3456 90.1737 89.3456 85.7415 86.612 83.0079L51.2566 47.6525L86.612 12.2972C89.3456 9.56353 89.3456 5.13138 86.612 2.39771ZM43.0079 3.1023C45.7416 0.36863 50.1737 0.36863 52.9074 3.1023C55.641 5.83597 55.641 10.2681 52.9074 13.0018L17.552 48.3571L52.9074 83.7125C55.641 86.4461 55.641 90.8783 52.9074 93.612C50.1737 96.3456 45.7416 96.3456 43.0079 93.612L2.7028 53.3069C-0.0308714 50.5732 -0.0308714 46.1411 2.7028 43.4074L43.0079 3.1023Z" fill="%236e6e6e"/></svg>');
+      }
+    }
+  }
+
+  &__title {
+    position: relative;
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    transition: color var(--theme-transition);
+  }
+
+  &__list {
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding: 0;
+    list-style: none;
   }
 }
 

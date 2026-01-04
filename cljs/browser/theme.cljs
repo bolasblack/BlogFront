@@ -106,18 +106,29 @@
     :light "Light"
     :dark "Dark"))
 
+(defn- next-theme-label
+  "Get label for the next theme (what clicking will switch to)"
+  [current]
+  (case current
+    :system "切换到浅色模式"
+    :light "切换到深色模式"
+    :dark "切换到自动模式"))
+
 (defn ThemeToggle
   "Theme toggle button component"
   []
   (let [current @theme-preference]
     [:button.ThemeToggle
      {:on-click cycle-theme!
+      :type "button"
+      :aria-label (next-theme-label current)
       :title (str "Theme: " (theme-label current) " (click to change)")}
-     [:span.ThemeToggle__icon
+     [:span.ThemeToggle__icon {:aria-hidden "true"}
       ;; Sun icon (shown when dark, clicks to light)
       [:svg.ThemeToggle__sun
        {:width "18" :height "18" :viewBox "0 0 24 24" :fill "none"
-        :stroke "currentColor" :stroke-width "2" :stroke-linecap "round"}
+        :stroke "currentColor" :stroke-width "2" :stroke-linecap "round"
+        :focusable "false"}
        [:circle {:cx "12" :cy "12" :r "5"}]
        [:line {:x1 "12" :y1 "1" :x2 "12" :y2 "3"}]
        [:line {:x1 "12" :y1 "21" :x2 "12" :y2 "23"}]
@@ -131,15 +142,17 @@
       ;; Moon icon (shown when light, clicks to dark)
       [:svg.ThemeToggle__moon
        {:width "18" :height "18" :viewBox "0 0 24 24" :fill "none"
-        :stroke "currentColor" :stroke-width "2" :stroke-linecap "round"}
+        :stroke "currentColor" :stroke-width "2" :stroke-linecap "round"
+        :focusable "false"}
        [:path {:d "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"}]]
 
       ;; Auto icon (shown when system, indicates auto mode)
       [:svg.ThemeToggle__auto
        {:width "18" :height "18" :viewBox "0 0 24 24" :fill "none"
-        :stroke "currentColor" :stroke-width "2" :stroke-linecap "round"}
+        :stroke "currentColor" :stroke-width "2" :stroke-linecap "round"
+        :focusable "false"}
        [:circle {:cx "12" :cy "12" :r "9"}]
        [:path {:d "M12 3v18"}]
        [:path {:d "M12 3a9 9 0 0 1 0 18" :fill "currentColor" :stroke "none"}]]]
 
-     [:span.ThemeToggle__label (theme-label current)]]))
+     [:span.ThemeToggle__label {:aria-hidden "true"} (theme-label current)]]))
