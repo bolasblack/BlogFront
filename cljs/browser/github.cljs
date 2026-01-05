@@ -3,10 +3,19 @@
    ["js-yaml" :as js-yaml]
    [rxcljs.core :as rc :include-macros true]
    [rxcljs.transformers :as rt :include-macros true]
-   [clojure.string :as s]))
+   [clojure.string :as s]
+   [browser.constants :as const]
+   [browser.router :as router]))
 
-(def ^:private INDEX_URL
-  "https://raw.githubusercontent.com/bolasblack/BlogPosts/master/_meta/data/index.json")
+(defn- get-data-base-url
+  "Get data base URL for a language"
+  [lang]
+  (str const/BASE_URL (if (= lang :en) "data.en/" "data/")))
+
+(defn- get-index-url
+  "Get index URL for a language"
+  [lang]
+  (str (get-data-base-url lang) "index.json"))
 
 (defprotocol IPost
   (id [post])
@@ -19,9 +28,9 @@
   (heading-id [post heading-text]))
 
 ;; Post record for data from index.json
-;; Additional field: content (loaded when viewing post)
+;; Additional field: content (loaded when viewing post), post-lang (language)
 (defrecord Post [path post-date post-title post-id url tags
-                 post-created-at post-updated-at content]
+                 post-created-at post-updated-at content post-lang]
   IPost
   (id [_] post-id)
   (date [_] post-date)
@@ -29,30 +38,48 @@
   (created-at [_] post-created-at)
   (updated-at [_] post-updated-at)
   (post-tags [_] tags)
-  (blog-url [_]
-    (str "#/" (js/encodeURIComponent post-id)))
-  (heading-id [_ heading-text]
-    (str "/" (js/encodeURIComponent post-id) "/" (js/encodeURIComponent heading-text))))
+  (blog-url [_] (router/blog-url post-id post-lang))
+  (heading-id [_ heading-text] (router/heading-url post-id heading-text post-lang)))
 
-(defn tag-url
-  "Generate URL for a tag page"
-  [tag]
-  (str "#/tag/" (js/encodeURIComponent tag)))
+(defn find-post-by-md-url
+  "Find a post by its md-url (the url field from index.json)
+   md-url can be:
+   - Full GitHub URL: https://github.com/bolasblack/BlogPosts/blob/master/xxx.md
+   - Just the filename: xxx.md
+   Returns the matching post or nil"
+  [posts md-url]
+  (let [;; Extract filename from md-url for matching
+        normalize-url (fn [url]
+                        (when url
+                          (-> url
+                              ;; Extract just the filename part
+                              (s/replace #"^.*/([^/]+)$" "$1")
+                              ;; Remove .md extension for comparison
+                              (s/replace #"\.md$" ""))))]
+    (->> posts
+         vals
+         (filter (fn [post]
+                   (let [post-url (:url post)
+                         ;; Match by full URL or by filename
+                         matches-full? (= post-url md-url)
+                         matches-filename? (= (normalize-url post-url)
+                                              (normalize-url md-url))]
+                     (or matches-full? matches-filename?))))
+         first)))
 
 (defn- index-post->Post
   "Convert a post entry from index.json to Post record"
-  [entry]
-  (map->Post {:path (:path entry)
-              :post-date (:date entry)
-              :post-title (:title entry)
-              :post-id (:id entry)
-              :url (:url entry)
-              :tags (:tags entry)
-              :post-created-at (:created-at entry)
-              :post-updated-at (:updated-at entry)}))
-
-(def ^:private INDEX_BASE_URL
-  "https://raw.githubusercontent.com/bolasblack/BlogPosts/master/_meta/data/")
+  ([entry] (index-post->Post entry nil))
+  ([entry lang]
+   (map->Post {:path (:path entry)
+               :post-date (:date entry)
+               :post-title (:title entry)
+               :post-id (:id entry)
+               :url (:url entry)
+               :tags (:tags entry)
+               :post-created-at (:created-at entry)
+               :post-updated-at (:updated-at entry)
+               :post-lang lang})))
 
 (defn- fetch-index-page
   "Fetch a single index page and return {:posts [...] :next-file ...}"
@@ -65,14 +92,15 @@
 
 (defn get-posts
   "Fetch all posts from static index.json, handling pagination"
-  []
-  (rc/go-loop [url INDEX_URL
-               all-posts []]
-    (let [{:keys [posts next-file]} (rc/<! (fetch-index-page url))
-          accumulated (into all-posts posts)]
-      (if next-file
-        (recur (str INDEX_BASE_URL next-file) accumulated)
-        (map index-post->Post accumulated)))))
+  ([] (get-posts nil))
+  ([lang]
+   (rc/go-loop [url (get-index-url lang)
+                all-posts []]
+     (let [{:keys [posts next-file]} (rc/<! (fetch-index-page url))
+           accumulated (into all-posts posts)]
+       (if next-file
+         (recur (str (get-data-base-url lang) next-file) accumulated)
+         (map #(index-post->Post % lang) accumulated))))))
 
 (defn- parse-markdown-content
   "Parse markdown content, extracting YAML frontmatter"
@@ -102,43 +130,14 @@
 
 (defn get-tag-posts
   "Fetch posts for a specific tag"
-  [tag]
-  (rc/go-let [tag-file (str "tags/" (s/lower-case tag) ".json")
-              url (str INDEX_BASE_URL tag-file)
-              response (rt/<p! (js/fetch url))
-              data (rt/<p! (.json response))
-              js-data (js->clj data :keywordize-keys true)]
-    {:tag (:tag js-data)
-     :count (:count js-data)
-     :posts (map index-post->Post (:posts js-data))}))
+  ([tag] (get-tag-posts tag nil))
+  ([tag lang]
+   (rc/go-let [tag-file (str "tags/" (s/lower-case tag) ".json")
+               url (str (get-data-base-url lang) tag-file)
+               response (rt/<p! (js/fetch url))
+               data (rt/<p! (.json response))
+               js-data (js->clj data :keywordize-keys true)]
+     {:tag (:tag js-data)
+      :count (:count js-data)
+      :posts (map #(index-post->Post % lang) (:posts js-data))})))
 
-(defn parse-url-hash
-  "Parse URL hash to determine route type
-   Returns: {:type :home} | {:type :post :post-id str :heading str :heading-id str} | {:type :tag :tag str}"
-  [url-hash]
-  (cond
-    ;; Tag route: #/tag/tag-name
-    (s/starts-with? url-hash "#/tag/")
-    {:type :tag
-     :tag (js/decodeURIComponent (subs url-hash 6))}
-
-    ;; Post route: #/post-id or #/post-id/heading
-    (re-matches #"^#?/([^/]+)(?:/(.*)$)?" url-hash)
-    (let [matches (re-matches #"^#?/([^/]+)(?:/(.*)$)?" url-hash)]
-      {:type :post
-       :post-id (js/decodeURIComponent (nth matches 1))
-       :heading (when (nth matches 2 nil)
-                  (js/decodeURIComponent (nth matches 2)))
-       :heading-id (s/replace url-hash #"^#?" "")})
-
-    ;; Home route
-    :else
-    {:type :home}))
-
-;; Legacy function for backward compatibility
-(defn parse-post-heading-id
-  "str -> nil | {:post-id str :heading str :heading-id str}"
-  [url-hash]
-  (let [parsed (parse-url-hash url-hash)]
-    (when (= (:type parsed) :post)
-      (select-keys parsed [:post-id :heading :heading-id]))))

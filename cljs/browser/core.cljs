@@ -1,208 +1,42 @@
 (ns browser.core
   (:require
-   [cljs.core.async :as a]
    [reagent.core :as r]
    [reagent.dom.client :as rdomc]
-   [rxcljs.core :as rc :include-macros true]
    [browser.utils :refer [dom-ready classnames render-md]]
    [browser.github :as g]
+   [browser.i18n :as i18n]
+   [browser.router :as router]
+   [browser.state :as st]
+   [browser.state-effects :as effects]
    [browser.theme :as theme]
    [redux.core :as f]
-   [redux.chan-middleware :refer [chan-middleware next-action]]
+   [redux.chan-middleware :refer [chan-middleware]]
    [redux-map-action.core :as rm]))
 
-;; store
-
-(defonce store (atom nil))
-
-(defrecord State
-    [loading-post-list
-     posts
-     loading-posts
-     visited-posts
-     visiting-post
-     ;; Tag view state
-     visiting-tag
-     tag-posts
-     loading-tag])
-
-(defonce state
-  (r/atom (map->State {})))
-
-
-(defmulti reducer #(:type %2))
-
-(defmethod reducer :posts-fetch [state action]
-  (assoc state :loading-post-list true))
-
-(defmethod reducer :posts-fetched [state {:keys [posts]}]
-  (let [ziped-posts (zipmap (map g/id posts) posts)]
-    (-> state
-        (assoc :loading-post-list false)
-        (assoc :posts ziped-posts))))
-
-(defmethod reducer :post-fetch [state {:keys [post]}]
-  (assoc-in state [:loading-posts (g/id post)] true))
-
-(defmethod reducer :post-fetched [state {:keys [post]}]
-  (-> state
-      (assoc-in [:posts (g/id post)] post)
-      (assoc-in [:loading-posts (g/id post)] false)))
-
-(defmethod reducer :post-show [state {:keys [post]}]
-  (-> state
-      (assoc-in [:visited-posts (g/id post)] true)
-      (assoc-in [:visiting-post] (g/id post))))
-
-(defmethod reducer :post-unshow [state {:keys [post-id]}]
-  (if (= (:visiting-post state) post-id)
-    (assoc state :visiting-post nil)
-    state))
-
-;; Tag reducers
-(defmethod reducer :tag-show [state {:keys [tag]}]
-  (-> state
-      (assoc :visiting-tag tag)
-      (assoc :loading-tag true)))
-
-(defmethod reducer :tag-fetched [state {:keys [tag posts]}]
-  (-> state
-      (assoc :tag-posts posts)
-      (assoc :loading-tag false)))
-
-(defmethod reducer :tag-unshow [state _]
-  (-> state
-      (assoc :visiting-tag nil)
-      (assoc :tag-posts nil)))
-
-(defmethod reducer :default [state] state)
-
-
-(defn subscribe-posts-fetch [action-chan res-chan]
-  (rc/go-loop []
-    (rc/<! (next-action action-chan :posts-fetch))
-    (rc/>! res-chan {:type :posts-fetched
-                     :posts (rc/<! (g/get-posts))})
-    (recur)))
-
-(defn subscribe-post-show [action-chan res-chan]
-  (rc/go-loop []
-    (let [{:keys [post]} (rc/<! (next-action action-chan :post-show))]
-      (rc/>! res-chan {:type :post-fetch :post post})
-      (let [post (if (:content post) post (rc/<! (g/get-post post)))]
-        (rc/>! res-chan {:type :post-fetched :post post})))
-    (recur)))
-
-(defn subscribe-tag-show [action-chan res-chan]
-  (rc/go-loop []
-    (let [{:keys [tag]} (rc/<! (next-action action-chan :tag-show))
-          tag-data (rc/<! (g/get-tag-posts tag))]
-      (rc/>! res-chan {:type :tag-fetched
-                       :tag (:tag tag-data)
-                       :posts (:posts tag-data)}))
-    (recur)))
-
-(defn scroll-to-element-by-id [elem-id]
-  (when-let [elem (js/document.getElementById elem-id)]
-    (let [elem-rect (.getBoundingClientRect elem)
-          scroll-top (+ js/document.scrollingElement.scrollTop elem-rect.top)]
-      (js/scrollTo #js {:top scroll-top
-                        :behavior "smooth"}))))
-
-;; Navigation history tracking (persists across refresh via history.state)
-;; Uses sessionStorage as bridge between history entries
-
-(defn get-nav-depth []
-  (or (when js/history.state (aget js/history.state "blog-nav-depth")) 0))
-
-(defn update-nav-depth! []
-  (if (and js/history.state (aget js/history.state "blog-nav-depth"))
-    ;; Back navigation or refresh - restore from history state
-    (js/sessionStorage.setItem "blog-current-depth"
-                               (aget js/history.state "blog-nav-depth"))
-    ;; Forward navigation - increment and save
-    (let [current-depth (js/parseInt
-                         (or (js/sessionStorage.getItem "blog-current-depth") "0")
-                         10)
-          new-depth (inc current-depth)]
-      (js/sessionStorage.setItem "blog-current-depth" new-depth)
-      (js/history.replaceState #js {:blog-nav-depth new-depth} ""))))
-
-(defn go-back! [e]
-  (.preventDefault e)
-  (if (> (get-nav-depth) 1)
-    (js/history.back)
-    (set! js/location.hash "#/")))
-
-(defn on-url-hash-changed [action-chan res-chan hash]
-  (rc/go
-    (let [route (g/parse-url-hash hash)]
-      (case (:type route)
-        :post
-        (when-let [post (get-in @state [:posts (:post-id route)])]
-          ;; Clear any tag view first
-          (when (:visiting-tag @state)
-            (rc/>! res-chan {:type :tag-unshow}))
-          (rc/>! res-chan {:type :post-show :post post})
-          (rc/<! (next-action action-chan :post-fetched))
-          (rc/<! (a/timeout 0))
-          (scroll-to-element-by-id (:heading-id route)))
-
-        :tag
-        (do
-          ;; Clear any post view first
-          (when-let [visiting-post (:visiting-post @state)]
-            (rc/>! res-chan {:type :post-unshow :post-id visiting-post}))
-          (rc/>! res-chan {:type :tag-show :tag (:tag route)}))
-
-        :home
-        (do
-          (when-let [visiting-post (:visiting-post @state)]
-            (rc/>! res-chan {:type :post-unshow :post-id visiting-post}))
-          (when (:visiting-tag @state)
-            (rc/>! res-chan {:type :tag-unshow})))))))
-
-(defn subscribe-init-app [action-chan res-chan]
-  (rc/go
-    (rc/>! res-chan {:type :posts-fetch})
-    (rc/<! (next-action action-chan :posts-fetched))
-    (update-nav-depth!)
-    (rc/<! (on-url-hash-changed action-chan res-chan js/location.hash))
-    (js/window.addEventListener
-     "hashchange"
-     (fn []
-       (update-nav-depth!)
-       (on-url-hash-changed action-chan res-chan js/location.hash)))))
-
-(defn subscribe-dispatcher [action-chan res-chan]
-  (let [mult-action-chan (a/mult action-chan)]
-    (doseq [subscribe
-            [subscribe-init-app
-             subscribe-posts-fetch
-             subscribe-post-show
-             subscribe-tag-show]]
-      (let [cloned-action-chan (a/tap mult-action-chan (a/chan (a/sliding-buffer 1)))]
-        (subscribe cloned-action-chan res-chan)))))
+(defn- t
+  "Translate helper that uses current language from state"
+  ([key] (i18n/t (:current-lang @st/state) key))
+  ([key args] (i18n/t (:current-lang @st/state) key args)))
 
 ;; components
 
 (defn BlogPostsTitleItem [post]
   ^{:key (g/id post)}
   [:li.BlogPostsTitleItem
-   [:a {:className (classnames {:visited (get-in @state [:visited-posts (g/id post)])})
+   [:a {:className (classnames {:visited (get-in @st/state [:visited-posts (g/id post)])})
         :href (g/blog-url post)
         :aria-label (str (g/title post) ", " (g/date post))}
     [:time.BlogPostsTitleItem__date {:dateTime (g/date post)} (g/date post)]
     [:h3.BlogPostsTitleItem__title (g/title post)]]])
 
 (defn BlogPosts []
-  (let [loading? (:loading-post-list @state)]
-    [:section.BlogPosts {:aria-label "文章列表"
+  (let [loading? (:loading-post-list @st/state)]
+    [:section.BlogPosts {:aria-label (t :post-list)
                          :aria-busy loading?}
      (if loading?
-       [:p {:role "status" :aria-live "polite"} "Loading..."]
+       [:p {:role "status" :aria-live "polite"} (t :loading)]
        [:ul {:role "list"}
-        (->> (:posts @state)
+        (->> (:posts @st/state)
              (map last)
              (sort-by #(g/date %) >)
              (map BlogPostsTitleItem)
@@ -221,7 +55,7 @@
         updated (g/updated-at post)
         tags (g/post-tags post)
         dates-differ? (and created updated (not= (subs created 0 10) (subs updated 0 10)))]
-    [:div.BlogPost__meta {:role "contentinfo" :aria-label "文章信息"}
+    [:div.BlogPost__meta {:role "contentinfo" :aria-label (t :post-info)}
      (when created
        [:span.BlogPost__meta-dates
         [:time {:dateTime (format-date created)} (format-date created)]
@@ -230,66 +64,104 @@
            [:span.BlogPost__meta-arrow " → "]
            [:time {:dateTime (format-date updated)} (format-date updated)]])])
      (when (seq tags)
-       [:ul.BlogPost__meta-tags {:aria-label "标签"}
+       [:ul.BlogPost__meta-tags {:aria-label (t :tags)}
         (for [tag tags]
           ^{:key tag}
           [:li.BlogPost__meta-tag
-           [:a {:href (g/tag-url tag)
-                :aria-label (str "查看标签 " tag " 的所有文章")}
+           [:a {:href (router/tag-url tag)
+                :aria-label (t :view-tag-posts tag)}
             (str "#" tag)]])])]))
 
 (defn BlogPost []
-  (let [visiting-post-id (:visiting-post @state)
-        visiting-post (get-in @state [:posts visiting-post-id])
-        loading? (get-in @state [:loading-posts visiting-post-id])
+  (let [visiting-post-id (:visiting-post @st/state)
+        visiting-post (get-in @st/state [:posts visiting-post-id])
+        loading? (get-in @st/state [:loading-posts visiting-post-id])
         has-content? (boolean (:content visiting-post))
         is-loading? (or loading? (not has-content?))]
     [:article.BlogPost {:aria-busy is-loading?}
      [:header.BlogPost__header
       [:a.BlogPost__back-list {:href "#/"
-                               :on-click go-back!
-                               :aria-label "返回"}
-       [:i.icon-back {:aria-hidden "true"}]]
+                               :on-click #(router/go-back! % (:current-lang @st/state))
+                               :aria-label (t :back)}
+       [:svg.icon-back {:width "18" :height "18" :viewBox "0 0 24 24" :fill "none"
+                        :stroke "currentColor" :stroke-width "2" :stroke-linecap "round"
+                        :aria-hidden "true" :focusable "false"}
+        [:path {:d "M19 12H5"}]
+        [:path {:d "M12 19l-7-7 7-7"}]]]
       [:h1 (g/title visiting-post)]
       [BlogPostMeta visiting-post]]
      (if is-loading?
-       [:p {:role "status" :aria-live "polite"} "Loading..."]
+       [:p {:role "status" :aria-live "polite"} (t :loading)]
        [:div.BlogPost__md
         {:dangerouslySetInnerHTML
          (r/unsafe-html (render-md (:content visiting-post)
-                                   :heading-id-renderer #(g/heading-id visiting-post %)))}])]))
+                                   :heading-id-renderer #(g/heading-id visiting-post %)
+                                   :lang (:post-lang visiting-post)))}])]))
 
 (defn TagPosts []
-  (let [tag (:visiting-tag @state)
-        posts (:tag-posts @state)
-        loading? (:loading-tag @state)]
-    [:section.TagPosts {:aria-label (str "标签 " tag " 的文章")}
+  (let [tag (:visiting-tag @st/state)
+        posts (:tag-posts @st/state)
+        loading? (:loading-tag @st/state)]
+    [:section.TagPosts {:aria-label (t :posts-tagged tag)}
      [:header.TagPosts__header
       [:a.TagPosts__back {:href "#/"
-                          :on-click go-back!
-                          :aria-label "返回"}
-       [:i.icon-back {:aria-hidden "true"}]]
+                          :on-click #(router/go-back! % (:current-lang @st/state))
+                          :aria-label (t :back)}
+       [:svg.icon-back {:width "18" :height "18" :viewBox "0 0 24 24" :fill "none"
+                        :stroke "currentColor" :stroke-width "2" :stroke-linecap "round"
+                        :aria-hidden "true" :focusable "false"}
+        [:path {:d "M19 12H5"}]
+        [:path {:d "M12 19l-7-7 7-7"}]]]
       [:h1.TagPosts__title (str "#" tag)]]
      (if loading?
-       [:p {:role "status" :aria-live "polite"} "Loading..."]
+       [:p {:role "status" :aria-live "polite"} (t :loading)]
        [:ul.TagPosts__list {:role "list"}
         (->> posts
              (sort-by #(g/date %) >)
              (map BlogPostsTitleItem)
              doall)])]))
 
+(defn FooterLinks
+  "Display footer links: Language · GitHub · X · RSS
+   position: :top-right (for BlogPosts) or :bottom-right (for BlogPost/TagPosts)"
+  [position]
+  (let [current-lang (:current-lang @st/state)
+        lang-link (if (= current-lang :en) "#/" "#/en/")
+        lang-text (if (= current-lang :en) "中文" "English")
+        rss-url (str "https://raw.githubusercontent.com/bolasblack/BlogPosts/master/_meta/"
+                     (if (= current-lang :en) "feed.en.xml" "feed.xml"))]
+    [:nav.FooterLinks {:class (name position)}
+     [:a {:href lang-link} lang-text]
+     [:span.FooterLinks__sep "·"]
+     [:a.FooterLinks__external {:href "https://github.com/bolasblack" :target "_blank" :rel "noopener"} "GitHub"]
+     [:span.FooterLinks__sep "·"]
+     [:a.FooterLinks__external {:href "https://x.com/c4605" :target "_blank" :rel "noopener"} "X"]
+     [:span.FooterLinks__sep "·"]
+     [:a.FooterLinks__external {:href rss-url :target "_blank" :rel "noopener"} "RSS"]]))
+
 (defn App []
   [:<>
    [theme/ThemeToggle]
    [:main {:role "main"}
     (cond
-      (:visiting-post @state) [BlogPost]
-      (:visiting-tag @state) [TagPosts]
-      :else [BlogPosts])]])
+      (:visiting-post @st/state)
+      [:<>
+       [BlogPost]
+       [FooterLinks :bottom-right]]
+
+      (:visiting-tag @st/state)
+      [:<>
+       [TagPosts]
+       [FooterLinks :bottom-right]]
+
+      :else
+      [:<>
+       [FooterLinks :top-right]
+       [BlogPosts]])]])
 
 ;; initialize
 
-(defn create-store! []
+(defn- create-store! []
   (let [devtools-enhancer (if js/window.__REDUX_DEVTOOLS_EXTENSION__
                             (rm/wrap-redux-devtools-enhancer
                              (js/window.__REDUX_DEVTOOLS_EXTENSION__
@@ -300,11 +172,11 @@
                                                      %2)}}))
                             identity)
         enhancer (comp
-                  (f/apply-middleware (chan-middleware subscribe-dispatcher))
+                  (f/apply-middleware (chan-middleware effects/subscribe-dispatcher))
                   rm/enhancer
                   f/clj-atom-state-compatible-enhancer
                   devtools-enhancer)]
-    (reset! store (f/create-store reducer state enhancer))))
+    (f/create-store st/reducer st/state enhancer)))
 
 (defonce react-root (atom nil))
 
@@ -317,7 +189,9 @@
     (reset! react-root (rdomc/create-root (js/document.getElementById "app"))))
   (rdomc/render @react-root [App]))
 
-(if-not @store
+(defonce ^:private initialized? (atom false))
+(when-not @initialized?
+  (reset! initialized? true)
   (dom-ready
    (fn []
      (theme/init-theme!)

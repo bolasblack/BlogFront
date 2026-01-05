@@ -25,7 +25,27 @@
                                  (callback))]
       (js/document.addEventListener "DOMContentLoaded" callback-when-loaded))))
 
-(defn render-md [content & {:keys [heading-id-renderer]
+(defn- md-link->blog-url
+  "Convert markdown relative link to blog URL.
+   ./2024-01-01-my-post.md -> #/2024-01-01-my-post (or #/en/2024-01-01-my-post)
+   Does NOT convert absolute URLs (http/https)"
+  [href lang]
+  (when (and href
+             ;; Must end with .md
+             (s/ends-with? href ".md")
+             ;; Must NOT be an absolute URL
+             (not (s/starts-with? href "http://"))
+             (not (s/starts-with? href "https://"))
+             ;; Must be a relative path (starts with ./, ../, or just filename)
+             (re-matches #"^\.{0,2}/?.+\.md$" href))
+    (let [;; Extract filename without path and extension
+          filename (-> href
+                       (s/replace #"^\.{0,2}/" "")
+                       (s/replace #"\.md$" ""))
+          prefix (if (= lang :en) "#/en/" "#/")]
+      (str prefix (js/encodeURIComponent filename)))))
+
+(defn render-md [content & {:keys [heading-id-renderer lang]
                             :or {heading-id-renderer #(js/encodeURIComponent %)}}]
   (let [mdit (-> (mdit-generator #js {:html true
                                       :highlight (fn [code lang]
@@ -73,7 +93,39 @@
                    ">"
                    caption
                    "</a></sup>"))))
+    ;; Override link_open to handle external links and internal .md links
+    (let [default-link-open (or (.-link_open rules)
+                                (fn [tokens idx options env slf]
+                                  (.renderToken slf tokens idx options)))]
+      (set! (.-link_open rules)
+            (fn [tokens idx options env slf]
+              (let [token (aget tokens idx)
+                    href-idx (.attrIndex token "href")
+                    href (when (>= href-idx 0)
+                           (aget (aget (.-attrs token) href-idx) 1))
+                    is-external? (and href
+                                      (or (s/starts-with? href "http://")
+                                          (s/starts-with? href "https://")))
+                    blog-url (md-link->blog-url href lang)]
+                ;; Handle internal .md links
+                (when blog-url
+                  (.attrSet token "href" blog-url))
+                ;; Handle external links
+                (when is-external?
+                  (.attrSet token "target" "_blank")
+                  (.attrSet token "rel" "noopener")
+                  (.attrPush token #js ["class" "external-link"]))
+                (default-link-open tokens idx options env slf)))))
     (.render mdit content)))
+
+(defn scroll-to-element-by-id
+  "Scroll to element by its ID"
+  [elem-id]
+  (when-let [elem (js/document.getElementById elem-id)]
+    (let [elem-rect (.getBoundingClientRect elem)
+          scroll-top (+ js/document.scrollingElement.scrollTop elem-rect.top)]
+      (js/scrollTo #js {:top scroll-top
+                        :behavior "smooth"}))))
 
 (defmacro js-swap! [var-symbol expr]
   `(set! ,var-symbol (,expr ,var-symbol)))

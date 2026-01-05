@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "deploy": "pnpm build && wrangler deploy",
     "p": "./configs/publish.sh"
   },
   "githubBlogRepo": "bolasblack/bolasblack.github.com",
@@ -31,6 +32,7 @@
     "sass": "^1.97.1",
     "shadow-cljs": "^3.3.4",
     "typescript": "^5.9.3",
-    "vite": "^7.3.0"
+    "vite": "^7.3.0",
+    "wrangler": "^4.54.0"
   }
 }

@@ -149,7 +149,7 @@ a {
 
   @include breakpoint-down($breakpoint-sm) {
     margin: 0 auto;
-    padding: 10px 20px;
+    padding: 10px 20px 100px; // Extra bottom padding for fixed navigation
   }
 }
 
@@ -354,36 +354,41 @@ a {
       background-color 200ms ease,
       color var(--theme-transition);
 
+    // Desktop: subtle hover effect
+    &:hover {
+      color: var(--color-text);
+    }
+
+    // SVG icon inherits currentColor via stroke="currentColor"
+    .icon-back {
+      display: block;
+    }
+
+    // Mobile: floating button style matching ThemeToggle
     @include breakpoint-down($breakpoint-sm) {
       .BlogPost & {
         position: fixed;
         top: auto;
         bottom: 20px;
         right: 20px;
-        z-index: 2;
+        z-index: 100;
         margin-left: 0;
+        padding: 10px;
         transform: none;
         background: var(--color-bg-elevated);
         border: 1px solid var(--color-border);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-      }
-    }
+        border-radius: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        transition:
+          background-color var(--theme-transition),
+          border-color var(--theme-transition),
+          color var(--theme-transition),
+          box-shadow 200ms ease;
 
-    &:hover {
-      background: var(--color-bg-code);
-    }
-
-    .icon-back {
-      position: relative;
-      display: block;
-      font-size: 0;
-    }
-
-    .icon-back::before {
-      content: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 89 96" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M86.612 2.39771C83.8783 -0.33596 79.4461 -0.33596 76.7125 2.39771L36.4089 42.7012L36.4074 42.7028C36.0657 43.0445 35.7667 43.4127 35.5104 43.8009C33.7164 46.518 34.0154 50.2103 36.4074 52.6023L36.4085 52.6034L76.7125 92.9074C79.4461 95.641 83.8783 95.641 86.612 92.9074C89.3456 90.1737 89.3456 85.7415 86.612 83.0079L51.2566 47.6525L86.612 12.2972C89.3456 9.56353 89.3456 5.13138 86.612 2.39771ZM43.0079 3.1023C45.7416 0.36863 50.1737 0.36863 52.9074 3.1023C55.641 5.83597 55.641 10.2681 52.9074 13.0018L17.552 48.3571L52.9074 83.7125C55.641 86.4461 55.641 90.8783 52.9074 93.612C50.1737 96.3456 45.7416 96.3456 43.0079 93.612L2.7028 53.3069C-0.0308714 50.5732 -0.0308714 46.1411 2.7028 43.4074L43.0079 3.1023Z" fill="%239a9a9a"/></svg>');
-
-      [data-theme="dark"] & {
-        content: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 89 96" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M86.612 2.39771C83.8783 -0.33596 79.4461 -0.33596 76.7125 2.39771L36.4089 42.7012L36.4074 42.7028C36.0657 43.0445 35.7667 43.4127 35.5104 43.8009C33.7164 46.518 34.0154 50.2103 36.4074 52.6023L36.4085 52.6034L76.7125 92.9074C79.4461 95.641 83.8783 95.641 86.612 92.9074C89.3456 90.1737 89.3456 85.7415 86.612 83.0079L51.2566 47.6525L86.612 12.2972C89.3456 9.56353 89.3456 5.13138 86.612 2.39771ZM43.0079 3.1023C45.7416 0.36863 50.1737 0.36863 52.9074 3.1023C55.641 5.83597 55.641 10.2681 52.9074 13.0018L17.552 48.3571L52.9074 83.7125C55.641 86.4461 55.641 90.8783 52.9074 93.612C50.1737 96.3456 45.7416 96.3456 43.0079 93.612L2.7028 53.3069C-0.0308714 50.5732 -0.0308714 46.1411 2.7028 43.4074L43.0079 3.1023Z" fill="%236e6e6e"/></svg>');
+        &:hover {
+          color: var(--color-text);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
       }
     }
   }
@@ -505,6 +510,25 @@ a {
       max-width: 100%;
       border-radius: 4px;
     }
+
+    // External links - editorial superscript style
+    .external-link {
+      &::after {
+        content: '↗';
+        display: inline-block;
+        margin-left: 1px;
+        font-size: 0.75em;
+        font-weight: 400;
+        vertical-align: 0.25em;
+        opacity: 0.5;
+        transition: opacity 200ms ease;
+        text-decoration: none;
+      }
+
+      &:hover::after {
+        opacity: 0.8;
+      }
+    }
   }
 }
 
@@ -534,34 +558,39 @@ a {
       background-color 200ms ease,
       color var(--theme-transition);
 
+    // Desktop: subtle hover effect
+    &:hover {
+      color: var(--color-text);
+    }
+
+    // SVG icon inherits currentColor via stroke="currentColor"
+    .icon-back {
+      display: block;
+    }
+
+    // Mobile: floating button style matching ThemeToggle
     @include breakpoint-down($breakpoint-sm) {
       position: fixed;
       top: auto;
       bottom: 20px;
       right: 20px;
-      z-index: 2;
+      z-index: 100;
       margin-left: 0;
+      padding: 10px;
       transform: none;
       background: var(--color-bg-elevated);
       border: 1px solid var(--color-border);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    }
+      border-radius: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      transition:
+        background-color var(--theme-transition),
+        border-color var(--theme-transition),
+        color var(--theme-transition),
+        box-shadow 200ms ease;
 
-    &:hover {
-      background: var(--color-bg-code);
-    }
-
-    .icon-back {
-      position: relative;
-      display: block;
-      font-size: 0;
-    }
-
-    .icon-back::before {
-      content: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 89 96" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M86.612 2.39771C83.8783 -0.33596 79.4461 -0.33596 76.7125 2.39771L36.4089 42.7012L36.4074 42.7028C36.0657 43.0445 35.7667 43.4127 35.5104 43.8009C33.7164 46.518 34.0154 50.2103 36.4074 52.6023L36.4085 52.6034L76.7125 92.9074C79.4461 95.641 83.8783 95.641 86.612 92.9074C89.3456 90.1737 89.3456 85.7415 86.612 83.0079L51.2566 47.6525L86.612 12.2972C89.3456 9.56353 89.3456 5.13138 86.612 2.39771ZM43.0079 3.1023C45.7416 0.36863 50.1737 0.36863 52.9074 3.1023C55.641 5.83597 55.641 10.2681 52.9074 13.0018L17.552 48.3571L52.9074 83.7125C55.641 86.4461 55.641 90.8783 52.9074 93.612C50.1737 96.3456 45.7416 96.3456 43.0079 93.612L2.7028 53.3069C-0.0308714 50.5732 -0.0308714 46.1411 2.7028 43.4074L43.0079 3.1023Z" fill="%239a9a9a"/></svg>');
-
-      [data-theme="dark"] & {
-        content: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 89 96" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M86.612 2.39771C83.8783 -0.33596 79.4461 -0.33596 76.7125 2.39771L36.4089 42.7012L36.4074 42.7028C36.0657 43.0445 35.7667 43.4127 35.5104 43.8009C33.7164 46.518 34.0154 50.2103 36.4074 52.6023L36.4085 52.6034L76.7125 92.9074C79.4461 95.641 83.8783 95.641 86.612 92.9074C89.3456 90.1737 89.3456 85.7415 86.612 83.0079L51.2566 47.6525L86.612 12.2972C89.3456 9.56353 89.3456 5.13138 86.612 2.39771ZM43.0079 3.1023C45.7416 0.36863 50.1737 0.36863 52.9074 3.1023C55.641 5.83597 55.641 10.2681 52.9074 13.0018L17.552 48.3571L52.9074 83.7125C55.641 86.4461 55.641 90.8783 52.9074 93.612C50.1737 96.3456 45.7416 96.3456 43.0079 93.612L2.7028 53.3069C-0.0308714 50.5732 -0.0308714 46.1411 2.7028 43.4074L43.0079 3.1023Z" fill="%236e6e6e"/></svg>');
+      &:hover {
+        color: var(--color-text);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       }
     }
   }
@@ -582,6 +611,82 @@ a {
     margin-inline-end: 0px;
     padding: 0;
     list-style: none;
+  }
+}
+
+// ============================================================================
+// Footer Links
+// ============================================================================
+
+.FooterLinks {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+  z-index: 99;
+  transition: color var(--theme-transition);
+
+  &.top-right {
+    position: fixed;
+    top: 24px;
+    right: 108px;
+
+    @include breakpoint-down($breakpoint-sm) {
+      position: static;
+      justify-content: center;
+      margin: 24px auto 12px;
+    }
+  }
+
+  &.bottom-right {
+    position: fixed;
+    bottom: 24px;
+    right: 108px;
+
+    @include breakpoint-down($breakpoint-sm) {
+      right: auto;
+      left: 20px;
+      bottom: 24px;
+    }
+  }
+
+  a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: color 200ms ease;
+
+    &:visited {
+      color: var(--color-text-muted);
+    }
+
+    &:hover {
+      color: var(--color-text);
+    }
+  }
+
+  &__external {
+    &::after {
+      content: '↗';
+      display: inline-block;
+      margin-left: 1px;
+      font-size: 0.875em;
+      vertical-align: 0.25em;
+      opacity: 0.5;
+      transition: opacity 200ms ease;
+    }
+
+    &:hover::after {
+      opacity: 0.8;
+    }
+  }
+
+  &__sep {
+    color: var(--color-text-faint);
+    font-size: 0.5rem;
+    opacity: 0.6;
+    user-select: none;
   }
 }
 

@@ -1,5 +1,7 @@
 (ns browser.theme
-  (:require [reagent.core :as r]))
+  (:require [reagent.core :as r]
+            [browser.i18n :as i18n]
+            [browser.state :as st]))
 
 ;; ============================================================================
 ;; Theme State
@@ -98,21 +100,26 @@
 ;; UI Component
 ;; ============================================================================
 
+(defn- t
+  "Translate helper that uses current language from state"
+  ([key] (i18n/t (:current-lang @st/state) key))
+  ([key args] (i18n/t (:current-lang @st/state) key args)))
+
 (defn theme-label
   "Get display label for current theme"
   [preference]
   (case preference
-    :system "Auto"
-    :light "Light"
-    :dark "Dark"))
+    :system (t :theme-auto)
+    :light (t :theme-light)
+    :dark (t :theme-dark)))
 
 (defn- next-theme-label
   "Get label for the next theme (what clicking will switch to)"
   [current]
   (case current
-    :system "切换到浅色模式"
-    :light "切换到深色模式"
-    :dark "切换到自动模式"))
+    :system (t :switch-to-light)
+    :light (t :switch-to-dark)
+    :dark (t :switch-to-auto)))
 
 (defn ThemeToggle
   "Theme toggle button component"
@@ -122,7 +129,7 @@
      {:on-click cycle-theme!
       :type "button"
       :aria-label (next-theme-label current)
-      :title (str "Theme: " (theme-label current) " (click to change)")}
+      :title (t :theme-current (theme-label current))}
      [:span.ThemeToggle__icon {:aria-hidden "true"}
       ;; Sun icon (shown when dark, clicks to light)
       [:svg.ThemeToggle__sun

@@ -255,7 +255,9 @@ export function shadowCljs(options: ShadowCljsOptions): PluginOption[] {
           const scripts = Object.entries(ctx.bundle ?? {})
             .filter(
               ([fileName, asset]) =>
-                asset.type === "asset" && fileName.includes(CLJS_JS_SUFFIX)
+                asset.type === "asset" &&
+                fileName.includes(".cljs") &&
+                fileName.endsWith(".js")
             )
             .map(([fileName]) => `/${fileName}`);
           return injectScripts(html, scripts);
