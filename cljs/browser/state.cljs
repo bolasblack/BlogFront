@@ -27,7 +27,7 @@
 (defmulti reducer #(:type %2))
 
 ;; Post reducers
-(defmethod reducer :posts-fetch [state action]
+(defmethod reducer :posts-fetch [state _]
   (assoc state :loading-post-list true))
 
 (defmethod reducer :posts-fetched [state {:keys [posts]}]
@@ -47,7 +47,7 @@
 (defmethod reducer :post-show [state {:keys [post]}]
   (-> state
       (assoc-in [:visited-posts (g/id post)] true)
-      (assoc-in [:visiting-post] (g/id post))))
+      (assoc :visiting-post (g/id post))))
 
 (defmethod reducer :post-unshow [state {:keys [post-id]}]
   (if (= (:visiting-post state) post-id)
@@ -60,7 +60,7 @@
       (assoc :visiting-tag tag)
       (assoc :loading-tag true)))
 
-(defmethod reducer :tag-fetched [state {:keys [tag posts]}]
+(defmethod reducer :tag-fetched [state {:keys [posts]}]
   (-> state
       (assoc :tag-posts posts)
       (assoc :loading-tag false)))

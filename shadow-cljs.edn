@@ -4,4 +4,15 @@
                     :output-dir ".shadow-cljs/browser-out"
                     :asset-path "."
                     :modules {:main {:entries [browser.core]}}
-                    :compiler-options {:source-map true}}}}
+                    :compiler-options {:optimizations :simple
+                                       :source-map true}}
+          :worker {:target :esm
+                   :runtime :custom
+                   :output-dir ".shadow-cljs/worker-out"
+                   :modules {:worker {:entries [worker.core]
+                                      :exports {default worker.core/default}}}
+                   :js-options {:js-provider :import}
+                   :compiler-options {:optimizations :simple
+                                      :source-map true
+                                      :output-wrapper false}
+                   :devtools {:enabled false}}}}

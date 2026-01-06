@@ -6,10 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "deploy": "pnpm build && wrangler deploy",
-    "p": "./configs/publish.sh"
+    "build:worker": "shadow-cljs release worker",
+    "deploy": "pnpm build && pnpm build:worker && wrangler deploy"
   },
-  "githubBlogRepo": "bolasblack/bolasblack.github.com",
   "keywords": [],
   "author": "c4605 <bolasblack@gmail.com>",
   "license": "MIT",
@@ -26,6 +25,7 @@
     "redux": "^5.0.1"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.17.1",
     "@types/node": "^22.15.29",
     "edn-data": "^1.1.2",
     "picocolors": "^1.1.1",

@@ -18,9 +18,11 @@ node_modules/*
 .nrepl-*
 
 .start-out
-.claude/settings.local.json
 
+# others
+.wrangler
+.claude/ralph-loop.local.md
+.claude/settings.local.json
 public
 dist
 publish_repo
-test/test-results.xml

@@ -1,5 +1,7 @@
 name = "blog-c4605"
+main = ".shadow-cljs/worker-out/worker.js"
 compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
 
 [[routes]]
 pattern = "blog.c4605.com"
@@ -7,4 +9,16 @@ custom_domain = true
 
 [assets]
 directory = "./dist"
-not_found_handling = "single-page-application"
+binding = "ASSETS"
+run_worker_first = [
+  "/*",
+  "!/assets/*",
+  "!/*.js",
+  "!/*.css",
+  "!/*.map",
+  "!/*.ico",
+  "!/*.png",
+  "!/*.svg",
+  "!/robots.txt",
+  "!/CNAME",
+]

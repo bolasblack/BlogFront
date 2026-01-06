@@ -1,6 +1,6 @@
 (ns browser.theme
   (:require [reagent.core :as r]
-            [browser.i18n :as i18n]
+            [shared.i18n :as i18n]
             [browser.state :as st]))
 
 ;; ============================================================================
@@ -8,7 +8,6 @@
 ;; ============================================================================
 
 (def STORAGE_KEY "blog-theme")
-(def THEMES [:system :light :dark])
 
 ;; Current theme preference (not the actual applied theme)
 ;; :system = follow OS preference
@@ -109,17 +108,17 @@
   "Get display label for current theme"
   [preference]
   (case preference
-    :system (t :theme-auto)
-    :light (t :theme-light)
-    :dark (t :theme-dark)))
+    :system (t :theme/auto)
+    :light (t :theme/light)
+    :dark (t :theme/dark)))
 
 (defn- next-theme-label
   "Get label for the next theme (what clicking will switch to)"
   [current]
   (case current
-    :system (t :switch-to-light)
-    :light (t :switch-to-dark)
-    :dark (t :switch-to-auto)))
+    :system (t :theme/switch-to-light)
+    :light (t :theme/switch-to-dark)
+    :dark (t :theme/switch-to-auto)))
 
 (defn ThemeToggle
   "Theme toggle button component"
@@ -129,7 +128,7 @@
      {:on-click cycle-theme!
       :type "button"
       :aria-label (next-theme-label current)
-      :title (t :theme-current (theme-label current))}
+      :title (t :theme/current (theme-label current))}
      [:span.ThemeToggle__icon {:aria-hidden "true"}
       ;; Sun icon (shown when dark, clicks to light)
       [:svg.ThemeToggle__sun
