@@ -14,13 +14,13 @@
 (defrecord Store [redux-store]
   IStore
   (dispatch! [this action]
-    (.dispatch (:redux-store this) action))
+    (.dispatch ^js (:redux-store this) action))
   (subscribe [this f]
-    (.subscribe (:redux-store this) #(f)))
+    (.subscribe ^js (:redux-store this) #(f)))
   (get-state [this]
-    (.getState (:redux-store this)))
+    (.getState ^js (:redux-store this)))
   (replace-reducer! [this reducer]
-    (.replaceReducer (:redux-store this) reducer)))
+    (.replaceReducer ^js (:redux-store this) reducer)))
 
 (defn create-store
   "(create-store reducer preloaded-state? enhancer?)"

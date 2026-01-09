@@ -15,7 +15,7 @@
   (js/Object.assign
    #js {}
    redux-store
-   #js {:dispatch #(.dispatch redux-store (serialize-action %1))}))
+   #js {:dispatch #(.dispatch ^js redux-store (serialize-action %1))}))
 
 (defn enhancer [create-store]
   (fn [reducer preloaded-state enhancer]

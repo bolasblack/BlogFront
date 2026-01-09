@@ -20,7 +20,7 @@
 
       (rc/go-loop []
         (when-let [action (rc/<! result-chan)]
-          (.dispatch redux-store action))
+          (.dispatch ^js redux-store action))
         (recur))
 
       (fn [next-dispatch]

@@ -38,17 +38,19 @@
     (let [route (router/parse-pathname js/location.pathname js/location.hash)
           lang (:lang route)
           lang-changed? (not= lang (:current-lang @st/state))]
+
       ;; Update language if changed
       (when lang-changed?
         (rc/>! res-chan {:type :lang-changed :lang lang})
         ;; Reload posts for new language
         (rc/>! res-chan {:type :posts-fetch :lang lang})
         (rc/<! (next-action action-chan :posts-fetched)))
+
       (case (:type route)
         :goto-article
         ;; Find post by md-url and redirect to the correct article URL
         (when-let [post (gh/find-post-by-md-url (vals (:posts @st/state)) (:md-url route))]
-          (nav/navigate! (g/blog-url post)))
+          (nav/navigate! (router/blog-url (:id post) (:lang post))))
 
         :post
         (when-let [post (get-in @st/state [:posts (:id route)])]
@@ -65,21 +67,24 @@
         (do
           ;; Clear any post view first
           (when-let [visiting-post (:visiting-post @st/state)]
-            (rc/>! res-chan {:type :post-unshow :post-id visiting-post}))
+            (rc/>! res-chan {:type :post-unshow :post-id (:id visiting-post)}))
           (rc/>! res-chan {:type :tag-show :tag (:id route) :lang lang}))
 
         :home
         (do
           (when-let [visiting-post (:visiting-post @st/state)]
-            (rc/>! res-chan {:type :post-unshow :post-id visiting-post}))
+            (rc/>! res-chan {:type :post-unshow :post-id (:id visiting-post)}))
           (when (:visiting-tag @st/state)
-            (rc/>! res-chan {:type :tag-unshow})))))))
+            (rc/>! res-chan {:type :tag-unshow}))
+          (when-not (:posts @st/state)
+            (rc/>! res-chan {:type :posts-fetch})
+            (rc/<! (next-action action-chan :posts-fetched))))))))
 
 (defn- redirect-legacy-hash!
   "Check for legacy hash-based routes and redirect to new path-based URLs.
    Returns true if redirect happened, false otherwise."
   []
-  (when-let [new-url (router/parse-legacy-hash js/location.hash :zh)]
+  (when-let [new-url (router/parse-legacy-hash js/location.hash)]
     ;; Replace current history entry with the new URL (no back to hash route)
     (js/history.replaceState #js {} "" new-url)
     true))
@@ -88,8 +93,6 @@
   (rc/go
     ;; Check and redirect legacy hash routes before loading
     (redirect-legacy-hash!)
-    (rc/>! res-chan {:type :posts-fetch})
-    (rc/<! (next-action action-chan :posts-fetched))
     (nav/update-nav-depth!)
     (rc/<! (on-route-changed action-chan res-chan))
     ;; Use popstate for path-based routing (History API)

@@ -1,6 +1,7 @@
 (ns browser.theme
   (:require [reagent.core :as r]
             [shared.i18n :as i18n]
+            [shared.components :as ui]
             [browser.state :as st]))
 
 ;; ============================================================================
@@ -121,44 +122,12 @@
     :dark (t :theme/switch-to-auto)))
 
 (defn ThemeToggle
-  "Theme toggle button component"
+  "Theme toggle button component - uses shared component for hydration compatibility"
   []
-  (let [current @theme-preference]
-    [:button.ThemeToggle
-     {:on-click cycle-theme!
-      :type "button"
-      :aria-label (next-theme-label current)
-      :title (t :theme/current (theme-label current))}
-     [:span.ThemeToggle__icon {:aria-hidden "true"}
-      ;; Sun icon (shown when dark, clicks to light)
-      [:svg.ThemeToggle__sun
-       {:width "18" :height "18" :viewBox "0 0 24 24" :fill "none"
-        :stroke "currentColor" :stroke-width "2" :stroke-linecap "round"
-        :focusable "false"}
-       [:circle {:cx "12" :cy "12" :r "5"}]
-       [:line {:x1 "12" :y1 "1" :x2 "12" :y2 "3"}]
-       [:line {:x1 "12" :y1 "21" :x2 "12" :y2 "23"}]
-       [:line {:x1 "4.22" :y1 "4.22" :x2 "5.64" :y2 "5.64"}]
-       [:line {:x1 "18.36" :y1 "18.36" :x2 "19.78" :y2 "19.78"}]
-       [:line {:x1 "1" :y1 "12" :x2 "3" :y2 "12"}]
-       [:line {:x1 "21" :y1 "12" :x2 "23" :y2 "12"}]
-       [:line {:x1 "4.22" :y1 "19.78" :x2 "5.64" :y2 "18.36"}]
-       [:line {:x1 "18.36" :y1 "5.64" :x2 "19.78" :y2 "4.22"}]]
-
-      ;; Moon icon (shown when light, clicks to dark)
-      [:svg.ThemeToggle__moon
-       {:width "18" :height "18" :viewBox "0 0 24 24" :fill "none"
-        :stroke "currentColor" :stroke-width "2" :stroke-linecap "round"
-        :focusable "false"}
-       [:path {:d "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"}]]
-
-      ;; Auto icon (shown when system, indicates auto mode)
-      [:svg.ThemeToggle__auto
-       {:width "18" :height "18" :viewBox "0 0 24 24" :fill "none"
-        :stroke "currentColor" :stroke-width "2" :stroke-linecap "round"
-        :focusable "false"}
-       [:circle {:cx "12" :cy "12" :r "9"}]
-       [:path {:d "M12 3v18"}]
-       [:path {:d "M12 3a9 9 0 0 1 0 18" :fill "currentColor" :stroke "none"}]]]
-
-     [:span.ThemeToggle__label {:aria-hidden "true"} (theme-label current)]]))
+  (let [current @theme-preference
+        lang (:current-lang @st/state)]
+    [ui/ThemeToggle {:lang lang
+                     :on-click cycle-theme!
+                     :theme current
+                     :next-label (next-theme-label current)
+                     :current-label (theme-label current)}]))
