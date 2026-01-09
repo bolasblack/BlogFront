@@ -14,8 +14,9 @@
     "experimentalDecorators": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
-    "removeComments": false
+    "removeComments": false,
+    "types": ["vite/client"]
   },
-  "include": ["vite.config.ts"],
+  "include": ["vite.config.mts", "configs/**/*.ts"],
   "exclude": ["node_modules/**/*"]
 }

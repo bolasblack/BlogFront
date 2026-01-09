@@ -13,11 +13,14 @@ build.xml
 node_modules/*
 
 # clj
+.nrepl-*
 .shadow-cljs
 .cpcache
-.nrepl-*
-
 .start-out
+.calva
+.lsp
+.clj-kondo/*
+!.clj-kondo/config.edn
 
 # others
 .wrangler

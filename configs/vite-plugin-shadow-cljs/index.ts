@@ -1,0 +1,44 @@
+import type { PluginOption, ResolvedConfig } from "vite";
+import { createBuildPlugin } from "./plugins/build";
+import { createImportsInjectorPlugin } from "./plugins/importsInjector";
+import { createServePlugin } from "./plugins/serve";
+import { createVirtualModulePlugin } from "./plugins/virtualModule";
+import type { PluginContext, ShadowCljsOptions } from "./types";
+import { loadBuildConfigs, resolveConfigPath } from "./utils/shadowCljsConfig";
+
+export type { ShadowCljsOptions } from "./types";
+
+export function shadowCljs(options: ShadowCljsOptions): PluginOption[] {
+  const { buildIds } = options;
+  const ctx: Partial<PluginContext> = {};
+
+  async function initContext(config: ResolvedConfig): Promise<void> {
+    ctx.projectRoot = config.root;
+    ctx.configPath = resolveConfigPath(ctx.projectRoot, options.configPath);
+    ctx.buildConfigs = await loadBuildConfigs(ctx.configPath, buildIds);
+  }
+
+  function getContext(): PluginContext {
+    return ctx as PluginContext;
+  }
+
+  const buildPlugin = createBuildPlugin(initContext, getContext, buildIds);
+  const servePlugin = createServePlugin(initContext, getContext, buildIds);
+  const virtualModulePlugin = createVirtualModulePlugin(
+    initContext,
+    getContext,
+    options
+  );
+  const dependencyInjectorPlugin = createImportsInjectorPlugin(
+    initContext,
+    getContext,
+    options
+  );
+
+  return [
+    virtualModulePlugin,
+    dependencyInjectorPlugin,
+    buildPlugin,
+    servePlugin,
+  ];
+}
