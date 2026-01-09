@@ -1,0 +1,2 @@
+{:lint-as {rxcljs.core/go-let clojure.core/let
+           rxcljs.core/go-loop clojure.core/loop}}

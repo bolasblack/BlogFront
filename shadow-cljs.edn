@@ -1,18 +1,21 @@
 {:deps true
  :cache-root ".shadow-cljs"
- :builds {:browser {:target :browser
-                    :output-dir ".shadow-cljs/browser-out"
-                    :asset-path "."
-                    :modules {:main {:entries [browser.core]}}
+ :builds {:browser {:target :esm
+                    :js-options {:js-provider :import}
                     :compiler-options {:optimizations :simple
-                                       :source-map true}}
+                                       :source-map true
+                                       :output-feature-set :es-next}
+                    :output-dir ".shadow-cljs/browser-out"
+                    :asset-path "/assets/"
+                    :modules {:main {:entries [browser.core]}}
+                    :devtools {:after-load browser.core/remount-root}}
           :worker {:target :esm
                    :runtime :custom
-                   :output-dir ".shadow-cljs/worker-out"
-                   :modules {:worker {:entries [worker.core]
-                                      :exports {default worker.core/default}}}
                    :js-options {:js-provider :import}
                    :compiler-options {:optimizations :simple
                                       :source-map true
-                                      :output-wrapper false}
-                   :devtools {:enabled false}}}}
+                                      :output-feature-set :es-next}
+                   :output-dir ".shadow-cljs/worker-out"
+                   :modules {:worker {:entries [worker.core]
+                                      :exports {default worker.core/default}}}
+                   :devtools {}}}}

@@ -1,7 +1,8 @@
 name = "blog-c4605"
-main = ".shadow-cljs/worker-out/worker.js"
 compatibility_date = "2025-01-01"
-compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
 
 [[routes]]
 pattern = "blog.c4605.com"
@@ -13,12 +14,22 @@ binding = "ASSETS"
 run_worker_first = [
   "/*",
   "!/assets/*",
+
   "!/*.js",
+  "!/*.mjs",
+  "!/*.ts",
+  "!/*.mts",
+  "!/*.tsx",
+  "!/*.js.map",
+  "!/@*",
+
   "!/*.css",
-  "!/*.map",
+  "!/*.scss",
+
   "!/*.ico",
   "!/*.png",
   "!/*.svg",
+
   "!/robots.txt",
-  "!/CNAME",
+  "!/.well-known/*",
 ]

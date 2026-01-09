@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:worker": "shadow-cljs release worker",
-    "deploy": "pnpm build && pnpm build:worker && wrangler deploy"
+    "wrangler:dev": "pnpm build && wrangler dev",
+    "wrangler:deploy": "pnpm build && wrangler deploy"
   },
   "keywords": [],
   "author": "c4605 <bolasblack@gmail.com>",
