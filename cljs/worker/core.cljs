@@ -1,13 +1,16 @@
 (ns worker.core
+  (:refer-clojure :rename {str cstr})
   (:require
-   [clojure.string :as s]
+   [clojure.string :as str]
    [reagent.core :as r]
    [reagent.dom.server :as rdom-server]
+   [shared.constants :refer [preload-state-html-id]]
    [shared.components :as ui]
    [shared.github :as gh]
    [shared.i18n :as i18n]
    [shared.markdown :as md]
-   [shared.router :as router]))
+   [shared.router :as router]
+   [shared.state :as state]))
 
 ;; ============================================================================
 ;; Data Fetching
@@ -23,32 +26,33 @@
 
 (defn- fetch-all-posts
   "Recursively fetch all pages of posts"
-  [base-url url all-posts]
-  (-> (fetch-single-page url)
+  [lang first-page-url all-posts]
+  (-> (fetch-single-page first-page-url)
       (.then (fn [data]
                (if data
                  (let [posts (js->clj (aget data "posts") :keywordize-keys true)
                        next-file (aget data "pagination" "next-file")
                        accumulated (into all-posts posts)]
                    (if next-file
-                     (fetch-all-posts base-url (str base-url next-file) accumulated)
+                     (fetch-all-posts lang (cstr (gh/get-data-base-url lang) next-file) accumulated)
                      (js/Promise.resolve {:posts accumulated})))
                  (js/Promise.resolve {:posts all-posts}))))))
 
 (defn- fetch-posts-index [lang]
   (let [base-url (gh/get-data-base-url lang)
-        url (str base-url "index.json")]
-    (fetch-all-posts base-url url [])))
+        first-page-url (cstr base-url "index.json")]
+    (-> (fetch-all-posts lang first-page-url [])
+        (.then (fn [{:keys [posts]}]
+                 {:posts (mapv #(assoc % :lang lang) posts)})))))
 
 (defn- fetch-post-content-by-url
   "Fetch post content from GitHub raw URL"
   [post-url]
   (when post-url
     (-> (js/fetch (gh/to-raw-url post-url))
-        (.then (fn [res]
-                 (if (.-ok res)
-                   (.text res)
-                   (js/Promise.resolve nil))))
+        (.then #(if (.-ok %)
+                  (.text %)
+                  (js/Promise.resolve nil)))
         (.catch (fn [_] nil)))))
 
 ;; ============================================================================
@@ -117,13 +121,42 @@
   (let [lang-str (if (= lang :en) "en" "zh")
         meta-tags (render-meta-tags {:title title :description description})]
     (-> html
-        (s/replace #"<html>" (str "<html lang=\"" lang-str "\">"))
-        (s/replace #"<head>" (str "<head>" meta-tags)))))
+        (str/replace #"<html>" (cstr "<html lang=\"" lang-str "\">"))
+        (str/replace #"<head>" (cstr "<head>" meta-tags)))))
 
 (defn- inject-ssr-content [html app-html]
-  (s/replace html
-             #"<div id=\"app\" class=\"app-container\"></div>"
-             (str "<div id=\"app\" class=\"app-container\">" app-html "</div>")))
+  (str/replace html
+               #"<div id=\"app\" class=\"app-container\"></div>"
+               (cstr "<div id=\"app\" class=\"app-container\">" app-html "</div>")))
+
+(defn- prepare-ssr-state
+  "Prepare state data for client hydration.
+   Returns a plain map (no conversion needed for JSON serialization)."
+  [{:keys [route posts post raw-content]}]
+  (let [lang (:lang route)]
+    (case (:type route)
+      :post
+      {:current-lang lang
+       :visiting-post (when post
+                        (assoc post :content (or raw-content "")))}
+
+      :tag
+      {:current-lang lang
+       :visiting-tag (:id route)
+       :tag-posts posts}
+
+      ;; default: home/posts list
+      {:current-lang lang
+       :posts (zipmap (map :id posts) posts)})))
+
+(defn- inject-ssr-state
+  "Inject SSR state as JSON in a script tag for client hydration"
+  [html ssr-state]
+  (let [state-json (js/JSON.stringify (state/state->js ssr-state))
+        script-tag (cstr "<script id=\"" preload-state-html-id "\" type=\"application/json\">"
+                         state-json
+                         "</script>")]
+    (str/replace html "</head>" (cstr script-tag "</head>"))))
 
 ;; ============================================================================
 ;; Request Handler
@@ -144,7 +177,11 @@
   (-> (fetch-post-content-by-url (:url post))
       (.then (fn [raw-content]
                (when raw-content
-                 (md/render-md-simple (md/parse-frontmatter raw-content) lang))))))
+                 (let [content-no-fm (md/parse-frontmatter raw-content)]
+                   {:raw content-no-fm
+                    :rendered (md/render-md content-no-fm
+                                            :heading-id-renderer #(router/heading-url (:id post) % lang)
+                                            :lang lang)}))))))
 
 (defn- get-page-meta [route post]
   (let [lang (:lang route)
@@ -158,7 +195,7 @@
       {:title (t :seo/site-title nil)
        :description (t :seo/site-desc nil)})))
 
-(defn- build-html-response [base-html {:keys [route posts post rendered-content]}]
+(defn- build-html-response [base-html {:keys [route posts post raw-content rendered-content]}]
   (let [{:keys [title description]} (get-page-meta route post)
         app-html (render-app-html {:posts posts
                                    :post post
@@ -166,11 +203,17 @@
                                    :lang (:lang route)
                                    :route-type (:type route)
                                    :rendered-content rendered-content})
+        ssr-state (prepare-ssr-state {:route route
+                                      :posts posts
+                                      :post post
+                                      :raw-content raw-content
+                                      :rendered-content rendered-content})
         final-html (-> base-html
                        (inject-meta-tags {:title title
                                           :description description
                                           :lang (:lang route)})
-                       (inject-ssr-content app-html))]
+                       (inject-ssr-content app-html)
+                       (inject-ssr-state ssr-state))]
     (js/Response. final-html
                   #js {:headers #js {"Content-Type" "text/html;charset=UTF-8"}})))
 
@@ -207,11 +250,13 @@
              (let [post (find-post-by-id posts (:id route))]
                (if (and post (:url post))
                  (-> (fetch-and-render-post-content post (:lang route))
-                     (.then #(build-html-response base-html
-                                                  {:route route
-                                                   :posts posts
-                                                   :post post
-                                                   :rendered-content %})))
+                     (.then (fn [{:keys [raw rendered]}]
+                              (build-html-response base-html
+                                                   {:route route
+                                                    :posts posts
+                                                    :post post
+                                                    :raw-content raw
+                                                    :rendered-content rendered}))))
                  (build-html-response base-html
                                       {:route route
                                        :posts posts
