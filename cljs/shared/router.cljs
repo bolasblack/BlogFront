@@ -1,6 +1,16 @@
 (ns shared.router
   "Shared routing utilities for URL generation and parsing"
-  (:require [clojure.string :as s]))
+  (:require [clojure.string :as str]
+            [malli.core :as m]
+            [shared.github :as gh]))
+
+(def RouteType
+  "Route type for URL generation and parsing"
+  [:enum
+   :goto-article
+   :home
+   :post
+   :tag])
 
 ;; =============================================================================
 ;; URL Generation
@@ -26,9 +36,8 @@
 
 (defn tag-url
   "Generate URL for a tag page"
-  ([tag] (tag-url tag :zh))
-  ([tag lang]
-   (str (lang-prefix lang) "tag/" (js/encodeURIComponent tag))))
+  [tag lang]
+  (str (lang-prefix lang) "tag/" (js/encodeURIComponent tag)))
 
 (defn home-url
   "Generate home URL for a language"
@@ -44,37 +53,42 @@
    Returns: {:type :home|:post|:tag|:goto-article :lang :zh|:en ...}"
   [pathname hash]
   (let [;; Remove leading slash and check for language prefix
-        path (s/replace pathname #"^/" "")
-        en-prefix? (s/starts-with? path "en/")
+        path (str/replace pathname #"^/" "")
+        en-prefix? (str/starts-with? path "en/")
         lang (if en-prefix? :en :zh)
         ;; Strip language prefix for further parsing
         clean-path (if en-prefix? (subs path 3) path)]
     (cond
       ;; Goto article route: /goto/articles/{mdUrl}
-      (s/starts-with? clean-path "goto/articles/")
+      (str/starts-with? clean-path "goto/articles/")
       {:type :goto-article
-       :md-url (js/decodeURIComponent (subs clean-path 15))
-       :lang lang}
+       :lang lang
+       :md-url (js/decodeURIComponent (subs clean-path 15))}
 
       ;; Tag route: /tag/tag-name
-      (s/starts-with? clean-path "tag/")
+      (str/starts-with? clean-path "tag/")
       {:type :tag
-       :id (js/decodeURIComponent (subs clean-path 4))
-       :lang lang}
+       :lang lang
+       :id (js/decodeURIComponent (subs clean-path 4))}
+
+      ;; Post route: /post-id with optional #heading
+      (nil? (m/explain gh/PostId (js/decodeURIComponent clean-path)))
+      (let [post-id (js/decodeURIComponent clean-path)
+            heading (when (and hash (not (str/blank? hash)))
+                      (js/decodeURIComponent (str/replace hash #"^#" "")))]
+        {:type :post
+         :lang lang
+         :id post-id
+         :heading heading})
 
       ;; Home route: empty path
       (empty? clean-path)
       {:type :home
        :lang lang}
 
-      ;; Post route: /post-id with optional #heading
       :else
-      (let [heading (when (and hash (not (s/blank? hash)))
-                      (js/decodeURIComponent (s/replace hash #"^#" "")))]
-        {:type :post
-         :id (js/decodeURIComponent clean-path)
-         :heading heading
-         :lang lang}))))
+      {:type :home
+       :lang lang})))
 
 (defn parse-route
   "Parse pathname for SSR (no hash support)"
@@ -89,22 +103,9 @@
   "Parse legacy hash-based route and return redirect URL if applicable.
    Old format: /#/post-id or /#/tag/tag-name or /#/en/post-id
    Returns nil if hash is not a legacy route, otherwise returns the new URL."
-  [hash lang]
-  (when (and hash (s/starts-with? hash "#/"))
-    (let [hash-path (subs hash 2) ;; Remove "#/"
-          ;; Check for language prefix in hash
-          en-prefix? (s/starts-with? hash-path "en/")
-          hash-lang (if en-prefix? :en lang)
-          clean-path (if en-prefix? (subs hash-path 3) hash-path)]
-      (cond
-        ;; Tag route in hash: #/tag/tag-name or #/en/tag/tag-name
-        (s/starts-with? clean-path "tag/")
-        (tag-url (js/decodeURIComponent (subs clean-path 4)) hash-lang)
-
-        ;; Empty path means home
-        (empty? clean-path)
-        (home-url hash-lang)
-
-        ;; Post route: #/post-id or #/en/post-id
-        :else
-        (blog-url (js/decodeURIComponent clean-path) hash-lang)))))
+  [hash]
+  (when (and hash (str/starts-with? hash "#/"))
+    (let [substr (subs hash 2) ;; Remove "#/"
+          [pathname hash] (str/split substr "#")
+          parsed-type (:type (parse-pathname pathname hash))]
+      (if (= parsed-type :other) nil substr))))
