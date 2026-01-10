@@ -2,7 +2,7 @@
  :cache-root ".shadow-cljs"
  :builds {:browser {:target :esm
                     :js-options {:js-provider :import}
-                    :compiler-options {:optimizations :simple
+                    :compiler-options {:optimizations :advanced
                                        :source-map true
                                        :output-feature-set :es-next}
                     :output-dir ".shadow-cljs/browser-out"
@@ -12,7 +12,7 @@
           :worker {:target :esm
                    :runtime :custom
                    :js-options {:js-provider :import}
-                   :compiler-options {:optimizations :simple
+                   :compiler-options {:optimizations :advanced
                                       :source-map true
                                       :output-feature-set :es-next}
                    :output-dir ".shadow-cljs/worker-out"

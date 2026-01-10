@@ -2,8 +2,6 @@
   "compilerOptions": {
     "module": "esnext",
     "target": "esnext",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
     "noUnusedLocals": true,
     "noImplicitAny": true,
     "moduleResolution": "bundler",

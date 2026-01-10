@@ -1,7 +1,6 @@
 import { defineConfig } from "vite";
-import { resolve } from "path";
 import { cloudflare } from "@cloudflare/vite-plugin";
-import { shadowCljs } from "./configs/vite-plugin-shadow-cljs";
+import { shadowCljs } from "shadow-cljs-vite-plugin";
 
 export default defineConfig({
   root: ".",
