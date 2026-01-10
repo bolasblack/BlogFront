@@ -80,14 +80,14 @@
                            :lang lang
                            :loading? (nil? rendered-content)
                            :content [:div.BlogPost__md {:dangerouslySetInnerHTML (r/unsafe-html rendered-content)}]}]
-             [ui/FooterLinks {:lang lang :position :bottom-right}]]
+             [ui/FooterLinks {:lang lang :position :bottom-center}]]
       :tag [:<>
             [ui/TagPosts {:tag tag :posts posts :lang lang :loading? (empty? posts)}]
-            [ui/FooterLinks {:lang lang :position :bottom-right}]]
+            [ui/FooterLinks {:lang lang :position :bottom-center}]]
       ;; default: posts list
       [:<>
-       [ui/FooterLinks {:lang lang :position :top-right}]
-       [ui/BlogPosts {:posts posts :lang lang :loading? (empty? posts)}]])]])
+       [ui/BlogPosts {:posts posts :lang lang :loading? (empty? posts)}]
+       [ui/FooterLinks {:lang lang :position :bottom-center}]])]])
 
 ;; ============================================================================
 ;; HTML Rendering

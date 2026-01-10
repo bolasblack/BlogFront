@@ -96,17 +96,17 @@
       (:visiting-post @st/state)
       [:<>
        [BlogPost$]
-       [FooterLinks$ :bottom-right]]
+       [FooterLinks$ :bottom-center]]
 
       (:visiting-tag @st/state)
       [:<>
        [TagPosts$]
-       [FooterLinks$ :bottom-right]]
+       [FooterLinks$ :bottom-center]]
 
       :else
       [:<>
-       [FooterLinks$ :top-right]
-       [BlogPosts$]])]])
+       [BlogPosts$]
+       [FooterLinks$ :bottom-center]])]])
 
 ;; ============================================================================
 ;; Initialization

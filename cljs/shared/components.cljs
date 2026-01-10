@@ -153,6 +153,8 @@
      [:span.FooterLinks__sep "·"]
      [:a.FooterLinks__external {:href "https://github.com/bolasblack" :target "_blank" :rel "noopener"} "GitHub"]
      [:span.FooterLinks__sep "·"]
+     [:a.FooterLinks__external {:href "https://github.com/bolasblack/BlogFront" :target "_blank" :rel "noopener"} "Source Code"]
+     [:span.FooterLinks__sep "·"]
      [:a.FooterLinks__external {:href "https://x.com/c4605" :target "_blank" :rel "noopener"} "X"]
      [:span.FooterLinks__sep "·"]
      [:a.FooterLinks__external {:href rss-url :target "_blank" :rel "noopener"} "RSS"]]))

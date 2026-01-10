@@ -640,16 +640,11 @@ a {
     }
   }
 
-  &.bottom-right {
+  &.bottom-center {
     position: fixed;
     bottom: 24px;
-    right: 108px;
-
-    @include breakpoint-down($breakpoint-sm) {
-      right: auto;
-      left: 20px;
-      bottom: 24px;
-    }
+    left: 50%;
+    transform: translateX(-50%);
   }
 
   a {
@@ -767,4 +762,3 @@ a {
 .hljs-strong {
   font-weight: bold;
 }
-
