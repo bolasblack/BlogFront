@@ -30,7 +30,7 @@
   --color-selection-bg: rgba(184, 134, 11, 0.15);
 
   // Code highlighting (GitHub Light compatible)
-  --hljs-bg: #f6f8fa;
+  --hljs-bg: transparent;
   --hljs-text: #24292e;
   --hljs-comment: #6a737d;
   --hljs-keyword: #d73a49;
@@ -56,7 +56,7 @@
   --color-selection-bg: rgba(212, 168, 83, 0.2);
 
   // Code highlighting (GitHub Dark compatible)
-  --hljs-bg: #1e1e1e;
+  --hljs-bg: transparent;
   --hljs-text: #e1e4e8;
   --hljs-comment: #6a737d;
   --hljs-keyword: #f97583;
@@ -82,7 +82,7 @@
     --color-accent-muted: rgba(212, 168, 83, 0.15);
     --color-selection-bg: rgba(212, 168, 83, 0.2);
 
-    --hljs-bg: #1e1e1e;
+    --hljs-bg: transparent;
     --hljs-text: #e1e4e8;
     --hljs-comment: #6a737d;
     --hljs-keyword: #f97583;

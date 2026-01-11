@@ -4,7 +4,7 @@
   (:require
    [clojure.string :as str]
    [goog.object :as gobj]
-   ["highlight.js" :as hl]
+   ["highlight.js" :default hljs]
    ["markdown-it" :as mdit-module]
    ["markdown-it-anchor" :as mdit-anchor-module]
    ["markdown-it-footnote" :as mdit-footnote-module]
@@ -40,11 +40,20 @@
         mdit-anchor (or (.-default mdit-anchor-module) mdit-anchor-module)
         mdit-footnote (or (.-default mdit-footnote-module) mdit-footnote-module)
         ^js mdit (-> (mdit-generator #js {:html true
+                                          :langPrefix "hljs language-"
                                           :highlight (fn [code lang-hint]
                                                        (try
-                                                         (.-value (hl/highlight (str/trim code) #js {:language lang-hint}))
+                                                         (let [trimmed (str/trim code)
+                                                               lang (when (and lang-hint
+                                                                               (not (str/blank? lang-hint))
+                                                                               (.getLanguage hljs lang-hint))
+                                                                      lang-hint)
+                                                               result (if lang
+                                                                        (.highlight hljs trimmed #js {:language lang})
+                                                                        (.highlightAuto hljs trimmed))]
+                                                           (.-value result))
                                                          (catch js/Error _
-                                                           (str/trim code))))})
+                                                           "")))})
                      (.use mdit-anchor
                            #js {:permalink (.. mdit-anchor -permalink (linkInsideHeader
                                                                        #js {:class "header-anchor"
