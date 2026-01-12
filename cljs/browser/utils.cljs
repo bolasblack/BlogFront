@@ -1,14 +1,6 @@
 (ns browser.utils
-  (:require [clojure.string :as str]
-            [shared.markdown :as md]))
-
-(defn classnames [& cs]
-  (->> cs
-       (map #(cond
-               (map? %) (apply classnames %)
-               (coll? %) (if (last %) (name (first %)) nil)
-               :else (name %)))
-       (str/join " ")))
+  (:require
+   [shared.markdown :as md]))
 
 (defn dom-ready [callback]
   ;; https://github.com/jquery/jquery/blob/master/src/core/ready.js

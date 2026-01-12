@@ -10,7 +10,7 @@ export async function killProcess(proc: ChildProcess) {
   } else if (proc.pid == null) {
     try {
       proc.kill("SIGKILL");
-    } catch (e) {
+    } catch (e: any) {
       if (e.code !== "ESRCH") throw e;
     }
   } else {
@@ -19,7 +19,7 @@ export async function killProcess(proc: ChildProcess) {
       try {
         process.kill(-pid, signal);
         return false;
-      } catch (e) {
+      } catch (e: any) {
         if (e.code === "ESRCH") return true;
         throw e;
       }

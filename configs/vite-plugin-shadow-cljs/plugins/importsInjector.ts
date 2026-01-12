@@ -28,6 +28,10 @@ export function createImportsInjectorPlugin(
         return code + GOOG_IDEMPOTENT_PATCH;
       }
 
+      if (1 === 1) {
+        return code;
+      }
+
       const ctx = getContext();
       if (!ctx.buildConfigs) return;
 
@@ -76,10 +80,7 @@ const GOOG_IDEMPOTENT_PATCH = `
   goog.__shadowCljsIdempotentPatched__ = true;
 
   var origProvide = goog.provide;
-  goog.provide = function(name) {
-    if (goog.isProvided_(name)) return;
-    return goog.constructNamespace_.call(this, name);
-  };
+  goog.provide = goog.constructNamespace_;
 
   var origRequire = goog.require;
   goog.require = goog.module.get;

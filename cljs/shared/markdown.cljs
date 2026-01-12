@@ -68,11 +68,21 @@
                                                  (.attrSet token "id")))})
                      (.use mdit-footnote))
         ^js rules (.. mdit -renderer -rules)
+        default-fence (.-fence rules)
         get-refid (fn [tokens idx options env ^js slf]
                     (let [id (.. slf -rules (footnote_anchor_name tokens idx options env slf))
                           subid (gobj/getValueByKeys tokens idx "meta" "subId")
                           refid (if (> subid 0) (cstr id ":" subid) id)]
                       refid))]
+    (set! (.-fence rules)
+          (fn [tokens idx options env slf]
+            (let [html (default-fence tokens idx options env slf)]
+              (cond
+                (str/includes? html "<code class=\"")
+                (str/replace html "<code class=\"" "<code class=\"hljs ")
+                (str/includes? html "<code>")
+                (str/replace html "<code>" "<code class=\"hljs\">")
+                :else html))))
     (set! (.-footnote_anchor rules)
           (fn [tokens idx options env slf]
             (let [refid (get-refid tokens idx options env slf)]

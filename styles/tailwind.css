@@ -1,0 +1,127 @@
+@import "normalize.css";
+@import "tailwindcss";
+
+@source "../index.html";
+@source "../cljs/**/*.cljs";
+
+@layer base {
+  :root {
+    --line-height: 1.8;
+    --container-vertical-margin: 80px;
+    --container-width: 600px;
+    --theme-transition: 280ms ease-out;
+    --color-bg: #faf9f7;
+    --color-bg-elevated: #ffffff;
+    --color-bg-code: #f3f4f5;
+    --color-text: #2d2d2d;
+    --color-text-muted: #6b6b6b;
+    --color-text-faint: #9a9a9a;
+    --color-link: #3d3d3d;
+    --color-link-visited: #8a8a8a;
+    --color-border: #e0deda;
+    --color-accent: #b8860b;
+    --color-accent-muted: rgba(184, 134, 11, 0.12);
+    --color-selection-bg: rgba(184, 134, 11, 0.15);
+    --hljs-bg: #f6f8fa;
+    --hljs-text: #24292e;
+    --hljs-comment: #6a737d;
+    --hljs-keyword: #d73a49;
+    --hljs-string: #032f62;
+    --hljs-number: #005cc5;
+    --hljs-function: #6f42c1;
+    --hljs-variable: #e36209;
+  }
+
+  [data-theme="dark"] {
+    --color-bg: #161616;
+    --color-bg-elevated: #1e1e1e;
+    --color-bg-code: #252525;
+    --color-text: #e4e2df;
+    --color-text-muted: #a8a8a8;
+    --color-text-faint: #6e6e6e;
+    --color-link: #d4d2cf;
+    --color-link-visited: #7a7a7a;
+    --color-border: #333333;
+    --color-accent: #d4a853;
+    --color-accent-muted: rgba(212, 168, 83, 0.15);
+    --color-selection-bg: rgba(212, 168, 83, 0.2);
+    --hljs-bg: #1e1e1e;
+    --hljs-text: #e1e4e8;
+    --hljs-comment: #6a737d;
+    --hljs-keyword: #f97583;
+    --hljs-string: #9ecbff;
+    --hljs-number: #79b8ff;
+    --hljs-function: #b392f0;
+    --hljs-variable: #ffab70;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+      --color-bg: #161616;
+      --color-bg-elevated: #1e1e1e;
+      --color-bg-code: #252525;
+      --color-text: #e4e2df;
+      --color-text-muted: #a8a8a8;
+      --color-text-faint: #6e6e6e;
+      --color-link: #d4d2cf;
+      --color-link-visited: #7a7a7a;
+      --color-border: #333333;
+      --color-accent: #d4a853;
+      --color-accent-muted: rgba(212, 168, 83, 0.15);
+      --color-selection-bg: rgba(212, 168, 83, 0.2);
+      --hljs-bg: #1e1e1e;
+      --hljs-text: #e1e4e8;
+      --hljs-comment: #6a737d;
+      --hljs-keyword: #f97583;
+      --hljs-string: #9ecbff;
+      --hljs-number: #79b8ff;
+      --hljs-function: #b392f0;
+      --hljs-variable: #ffab70;
+    }
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  ::selection {
+    background: var(--color-selection-bg);
+  }
+
+  i {
+    font-style: normal;
+  }
+
+  html {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji",
+      "Segoe UI Emoji";
+    transition: background-color var(--theme-transition),
+      color var(--theme-transition);
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    font-size: 18px;
+    line-height: var(--line-height);
+  }
+
+  body {
+    background-color: var(--color-bg);
+  }
+
+  a {
+    color: var(--color-link);
+    transition: color var(--theme-transition);
+  }
+
+  a:visited {
+    color: var(--color-link-visited);
+  }
+
+ 
+}

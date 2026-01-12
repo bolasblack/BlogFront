@@ -26,12 +26,14 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.17.1",
+    "@tailwindcss/vite": "^4.1.18",
     "@types/node": "^22.15.29",
     "edn-data": "^1.1.2",
     "picocolors": "^1.1.1",
     "sass": "^1.97.1",
     "shadow-cljs": "^3.3.4",
     "shadow-cljs-vite-plugin": "^0.0.2",
+    "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
     "vite": "^7.3.0",
     "wrangler": "^4.54.0"
