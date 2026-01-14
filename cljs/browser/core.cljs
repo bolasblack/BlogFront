@@ -3,7 +3,7 @@
    [clojure.string :as str]
    [reagent.core :as r]
    [reagent.dom.client :as rdomc]
-   [browser.utils :refer [dom-ready classnames render-md]]
+   [browser.utils :refer [dom-ready render-md]]
    [browser.router :as router]
    [browser.state :as st]
    [browser.state-effects :as effects]
@@ -14,7 +14,8 @@
    [shared.constants :refer [preload-state-html-id]]
    [shared.components :as ui]
    [shared.router :as shared-router]
-   [shared.state :as shared-state]))
+   [shared.state :as shared-state]
+   [shared.classnames :refer [clsx]]))
 
 ;; ============================================================================
 ;; Smart Components (stateful wrappers around shared dumb components)
@@ -33,7 +34,7 @@
       :item-props-fn (fn [post]
                        (let [href (shared-router/blog-url (:id post) (:lang post))]
                          {:href href
-                          :class-fn #(classnames {:visited (get-in @st/state [:visited-posts (:id post)])})
+                          :class-fn #(clsx {:visited (get-in @st/state [:visited-posts (:id post)])})
                           :on-click (fn [e]
                                       (.preventDefault e)
                                       (router/navigate! href))}))}]))
@@ -78,7 +79,7 @@
       :item-props-fn (fn [post]
                        (let [href (shared-router/blog-url (:id post) (:lang post))]
                          {:href href
-                          :class-fn #(classnames {:visited (get-in @st/state [:visited-posts (:id post)])})
+                          :class-fn #(clsx {:visited (get-in @st/state [:visited-posts (:id post)])})
                           :on-click (fn [e]
                                       (.preventDefault e)
                                       (router/navigate! href))}))}]))

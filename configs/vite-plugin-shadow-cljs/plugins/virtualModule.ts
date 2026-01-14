@@ -7,7 +7,7 @@ import {
   isBrowserTarget,
   resolveConfigPath,
 } from "../utils/shadowCljsConfig";
-import { waitForBuildComplete } from "../utils/shadowCljsProcess";
+import { getGlobalState, waitForBuildComplete } from "../utils/shadowCljsProcess";
 import type { PluginContext, ShadowCljsOptions } from "../types";
 import { existsAsync } from "../utils/existsAsync";
 import {
@@ -47,6 +47,11 @@ export function createVirtualModulePlugin(
       const filePath = getEntryPath(ctx.projectRoot, buildConfig);
 
       while (!(await existsAsync(filePath))) {
+        if (!getGlobalState()) {
+          throw new Error(
+            `Build output file not found: ${filePath}.\nEnsure shadow-cljs release succeeded.`
+          );
+        }
         await waitForBuildComplete(buildId);
       }
 

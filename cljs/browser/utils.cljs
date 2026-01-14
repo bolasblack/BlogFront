@@ -2,14 +2,6 @@
   (:require [clojure.string :as str]
             [shared.markdown :as md]))
 
-(defn classnames [& cs]
-  (->> cs
-       (map #(cond
-               (map? %) (apply classnames %)
-               (coll? %) (if (last %) (name (first %)) nil)
-               :else (name %)))
-       (str/join " ")))
-
 (defn dom-ready [callback]
   ;; https://github.com/jquery/jquery/blob/master/src/core/ready.js
   ;; https://developer.mozilla.org/en-US/docs/Web/API/Document/readyState

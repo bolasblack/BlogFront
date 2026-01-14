@@ -8,7 +8,7 @@
                                 cljsjs/react-dom-server
                                 cljsjs/create-react-class]}
   metosin/malli {:mvn/version "0.17.0"}
-  thheller/shadow-cljs {:mvn/version "3.3.4"}}
+  thheller/shadow-cljs {:mvn/version "3.3.5"}}
  :aliases
  {:nrepl {:extra-deps {cider/cider-nrepl {:mvn/version "0.58.0"}}}
   :shadow-cljs {:main-opts ["-m" "shadow.cljs.devtools.cli"]}}}

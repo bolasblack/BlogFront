@@ -1,6 +1,6 @@
 import type { PluginOption, ResolvedConfig } from "vite";
 import { createBuildPlugin } from "./plugins/build";
-import { createImportsInjectorPlugin } from "./plugins/importsInjector";
+import { createCljsEnvPatchPlugin } from "./plugins/cljsEnvPatch";
 import { createServePlugin } from "./plugins/serve";
 import { createVirtualModulePlugin } from "./plugins/virtualModule";
 import type { PluginContext, ShadowCljsOptions } from "./types";
@@ -29,16 +29,11 @@ export function shadowCljs(options: ShadowCljsOptions): PluginOption[] {
     getContext,
     options
   );
-  const dependencyInjectorPlugin = createImportsInjectorPlugin(
+  const cljsEnvPatchPlugin = createCljsEnvPatchPlugin(
     initContext,
     getContext,
     options
   );
 
-  return [
-    virtualModulePlugin,
-    dependencyInjectorPlugin,
-    buildPlugin,
-    servePlugin,
-  ];
+  return [virtualModulePlugin, cljsEnvPatchPlugin, buildPlugin, servePlugin];
 }
