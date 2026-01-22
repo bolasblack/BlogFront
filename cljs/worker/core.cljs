@@ -4,8 +4,8 @@
    [clojure.string :as str]
    [reagent.core :as r]
    [reagent.dom.server :as rdom-server]
-   [shared.constants :refer [preload-state-html-id]]
    [shared.components :as ui]
+   [shared.constants :refer [preload-state-html-id]]
    [shared.github :as gh]
    [shared.i18n :as i18n]
    [shared.markdown :as md]
@@ -104,11 +104,14 @@
 
 (defn- render-meta-tags
   "Render meta tags as Hiccup and convert to HTML string"
-  [{:keys [title description]}]
+  [{:keys [title description lang]}]
   (rdom-server/render-to-static-markup
    (r/as-element
     [:<>
      [:title title]
+     [:link {:rel "alternate"
+             :type "application/rss+xml"
+             :href (ui/rss-url lang)}]
      [:meta {:name "description" :content description}]
      [:meta {:property "og:title" :content title}]
      [:meta {:property "og:description" :content description}]
@@ -119,7 +122,7 @@
 
 (defn- inject-meta-tags [html {:keys [title description lang]}]
   (let [lang-str (if (= lang :en) "en" "zh")
-        meta-tags (render-meta-tags {:title title :description description})]
+        meta-tags (render-meta-tags {:title title :description description :lang lang})]
     (-> html
         (str/replace #"<html>" (cstr "<html lang=\"" lang-str "\">"))
         (str/replace #"<head>" (cstr "<head>" meta-tags)))))

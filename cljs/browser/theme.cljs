@@ -123,10 +123,11 @@
 
 (defn ThemeToggle
   "Theme toggle button component - uses shared component for hydration compatibility"
-  []
+  [props]
   (let [current @theme-preference
         lang (:current-lang @st/state)]
-    [ui/ThemeToggle {:lang lang
+    [ui/ThemeToggle {:class (:class props)
+                     :lang lang
                      :on-click cycle-theme!
                      :theme current
                      :next-label (next-theme-label current)

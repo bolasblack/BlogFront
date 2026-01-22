@@ -27,7 +27,13 @@ export function createCljsEnvPatchPlugin(
 /**
  * Appended to cljs_env.js to make goog.provide/goog.module idempotent.
  *
- * Shadow-cljs patch-goog! does:
+ * Why this is needed:
+ * Vite's HMR re-executes module code when files change, but globalThis state
+ * (like goog.loadedModules_) persists across HMR updates. Google Closure Library
+ * assumes modules are loaded exactly once and throws "Namespace already declared"
+ * errors on duplicate registration. This patch makes the registration idempotent.
+ *
+ * Shadow-cljs patch-goog! does similar things:
  * - goog.provide -> goog.constructNamespace_
  * - goog.require -> goog.module.get
  *
@@ -39,13 +45,22 @@ const GOOG_IDEMPOTENT_PATCH = `
   if (goog.__shadowCljsIdempotentPatched__) return;
   goog.__shadowCljsIdempotentPatched__ = true;
 
-  var origProvide = goog.provide;
+  // Make provide idempotent
   goog.provide = function(name) {
-    if (goog.isProvided_(name)) return;
-    return goog.constructNamespace_.call(this, name);
+    return goog.isProvided_(name) ? undefined : goog.constructNamespace_.call(this, name);
   };
 
-  var origRequire = goog.require;
+  // Use module.get for require (shadow-cljs convention)
   goog.require = goog.module.get;
+
+  // Make module idempotent for HMR compatibility
+  var origModule = goog.module;
+  goog.module = Object.assign(function(name) {
+    if (name in goog.loadedModules_) {
+      goog.moduleLoaderState_.moduleName = name;
+      return;
+    }
+    return origModule.call(this, name);
+  }, origModule);
 })();
 `;

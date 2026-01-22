@@ -11,11 +11,12 @@ export interface BuildConfig {
   modules: string[];
   runtime?: string;
 }
+export type BuildConfigMap = Map</* buildId */ string, BuildConfig>;
 
 export interface PluginContext {
   projectRoot: string;
   configPath: string;
-  buildConfigs: Map<string, BuildConfig>;
+  buildConfigs: BuildConfigMap;
 }
 
 export interface ShadowGlobalState {

@@ -1,19 +1,17 @@
 import * as fs from "fs/promises";
-import { sep as pathSep, resolve } from "path";
+import { resolve } from "path";
 import type { PluginOption, ResolvedConfig } from "vite";
-import { TAG } from "../constants";
-import {
-  getEntryPath,
-  isBrowserTarget,
-  resolveConfigPath,
-} from "../utils/shadowCljsConfig";
-import { getGlobalState, waitForBuildComplete } from "../utils/shadowCljsProcess";
 import type { PluginContext, ShadowCljsOptions } from "../types";
 import { existsAsync } from "../utils/existsAsync";
+import { getEntryPath, isBrowserTarget } from "../utils/shadowCljsConfig";
+import {
+  getGlobalState,
+  waitForBuildComplete,
+} from "../utils/shadowCljsProcess";
 import {
   isShadowCljsVirtualModule,
   parseBuildIdFromVirtualId,
-  toResolvedVirtualId,
+  sendHmrUpdate,
 } from "../utils/virtual";
 
 export function createVirtualModulePlugin(
@@ -67,51 +65,26 @@ export function createVirtualModulePlugin(
       return `export * from "${filePath}";\n${appendContent}`;
     },
 
-    configureServer(server) {
-      const configPath = resolveConfigPath(
-        server.config.root ?? process.cwd(),
-        options.configPath
-      );
+    // Intercept HMR for shadow-cljs output files
+    hotUpdate(hmrCtx) {
+      const ctx = getContext();
 
-      let restartPromise: Promise<void> | null = null;
-      server.watcher.add(configPath);
-      server.watcher.on("change", (file: string) => {
-        if (file !== configPath) return;
-        if (restartPromise) return;
-        restartPromise = server
-          .restart(true)
-          .catch((error) => {
-            console.warn(`${TAG} Failed to restart Vite server:`, error);
-          })
-          .finally(() => {
-            restartPromise = null;
-          });
-      });
+      for (const buildConfig of ctx.buildConfigs.values()) {
+        const outputDir = resolve(ctx.projectRoot, buildConfig.outputDir);
+        if (!hmrCtx.file.startsWith(outputDir)) continue;
 
-      const handleFileChange = (file: string) => {
-        const ctx = getContext();
-        if (!ctx.buildConfigs) return;
-
-        for (const buildConfig of ctx.buildConfigs.values()) {
-          const outputDir = resolve(ctx.projectRoot, buildConfig.outputDir);
-          const entryPath = getEntryPath(ctx.projectRoot, buildConfig);
-          const isEntry = file === entryPath;
-          const isInOutputDir = file.startsWith(`${outputDir}${pathSep}`);
-
-          if (!isEntry && !isInOutputDir) continue;
-
-          const mod = server.moduleGraph.getModuleById(
-            toResolvedVirtualId(buildConfig.id)
-          );
-          if (mod) {
-            server.moduleGraph.invalidateModule(mod);
-          }
+        // Browser targets: let shadow-cljs handle HMR, skip Vite's HMR
+        if (isBrowserTarget(buildConfig)) {
+          return [];
         }
-      };
 
-      server.watcher.on("add", handleFileChange);
-      server.watcher.on("change", handleFileChange);
-      server.watcher.on("unlink", handleFileChange);
+        // Non-browser targets: queue HMR update
+        // The file is already invalidated by Vite, just queue our HMR update
+        void sendHmrUpdate(getContext, hmrCtx.server, buildConfig.id);
+
+        // Return empty array to prevent Vite's default HMR (full reload)
+        return [];
+      }
     },
   };
 }
@@ -119,7 +92,9 @@ export function createVirtualModulePlugin(
 const PREVENT_VITE_HMR_FULL_RELOAD = `
 ;(function() {
   if (import.meta.hot) {
-    import.meta.hot.accept(() => {});
+    import.meta.hot.accept((mod) => {
+      console.log('[ShadowCLJS Patch] mod updated', mod);
+    });
   }
 })();
 `;

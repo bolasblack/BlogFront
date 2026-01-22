@@ -66,11 +66,11 @@ const recordBuildCompleteFromLine = (line: string) => {
 
   if (!state.buildCompleteIds.has(buildId)) {
     state.buildCompleteIds.add(buildId);
-    state.notifyBuildComplete(buildId);
   }
+  state.notifyBuildComplete(buildId);
 };
-export function handleShadowProcessOutputs(proc: ChildProcess): void {
-  proc.stdout?.on("data", (data: Buffer) => {
+export function handleShadowProcessOutputs(proc: ChildProcess): () => void {
+  const onStdoutData = (data: Buffer) => {
     // shadow-cljs log lines are prefixed; skip buffering to keep output streaming.
     for (const line of data.toString().trim().split("\n")) {
       console.log(`${TAG} ${line}`);
@@ -78,9 +78,9 @@ export function handleShadowProcessOutputs(proc: ChildProcess): void {
       if (line.length === 0) continue;
       recordBuildCompleteFromLine(line);
     }
-  });
+  };
 
-  proc.stderr?.on("data", (data: Buffer) => {
+  const onStderrData = (data: Buffer) => {
     // shadow-cljs log lines are prefixed; skip buffering to keep output streaming.
     for (const line of data.toString().trim().split("\n")) {
       console.error(`${TAG} ${pc.red(line)}`);
@@ -88,15 +88,25 @@ export function handleShadowProcessOutputs(proc: ChildProcess): void {
       if (line.length === 0) continue;
       recordBuildCompleteFromLine(line);
     }
-  });
+  };
 
-  proc.on("close", (code) => {
+  const onClose = (code: number | null) => {
     if (code !== null && code !== 0) {
       console.error(
         `\n${pc.bgRed(pc.bold(" shadow-cljs crashed! "))} Exit code: ${code}\n`
       );
     }
-  });
+  };
+
+  proc.stdout?.on("data", onStdoutData);
+  proc.stderr?.on("data", onStderrData);
+  proc.on("close", onClose);
+
+  return () => {
+    proc.stdout?.off("data", onStdoutData);
+    proc.stderr?.off("data", onStderrData);
+    proc.off("close", onClose);
+  };
 }
 
 export async function stopGlobalShadowProcess() {

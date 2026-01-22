@@ -1,9 +1,7 @@
 (ns shared.github
   "Shared GitHub utilities for both browser and worker"
-  (:require [clojure.string :as str]))
-
-(def ^:private base-url
-  "https://raw.githubusercontent.com/bolasblack/BlogPosts/master/_meta/")
+  (:require [clojure.string :as str]
+            [shared.constants :as constants]))
 
 (defn to-raw-url
   "Convert GitHub blob URL to raw content URL"
@@ -15,7 +13,7 @@
 (defn get-data-base-url
   "Get data base URL for a language"
   [lang]
-  (str base-url (if (= lang :en) "data.en/" "data/")))
+  (str constants/blog-system-meta-url (if (= lang :en) "data.en/" "data/")))
 
 (defn find-post-by-md-url
   "Find a post by its md-url (the url field from index.json).

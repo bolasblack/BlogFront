@@ -2,6 +2,8 @@
   "Shared presentational (dumb) components for both browser and worker.
    These components receive all data as props and contain no state logic."
   (:require
+   [shared.classnames :refer [clsx]]
+   [shared.constants :as constants]
    [shared.i18n :as i18n]
    [shared.router :as router]))
 
@@ -16,6 +18,13 @@
   "Format ISO date string to YYYY-MM-DD"
   [iso-str]
   (when iso-str (subs iso-str 0 10)))
+
+(defn rss-url
+  "Generate RSS feed URL for the given language.
+   Default (nil or :zh) returns Chinese feed, :en returns English feed."
+  ([] (rss-url nil))
+  ([lang]
+   (str constants/blog-system-meta-url (if (= lang :en) "feed.en.xml" "feed.xml"))))
 
 ;; ============================================================================
 ;; Presentational Components
@@ -145,9 +154,7 @@
    Props: {:lang keyword :position keyword}"
   [{:keys [lang position]}]
   (let [lang-link (if (= lang :en) "/" "/en/")
-        lang-text (if (= lang :en) "中文" "English")
-        rss-url (str "https://raw.githubusercontent.com/bolasblack/BlogPosts/master/_meta/"
-                     (if (= lang :en) "feed.en.xml" "feed.xml"))]
+        lang-text (if (= lang :en) "中文" "English")]
     [:nav.FooterLinks {:class (when position (name position))}
      [:a {:href lang-link} lang-text]
      [:span.FooterLinks__sep "·"]
@@ -157,17 +164,22 @@
      [:span.FooterLinks__sep "·"]
      [:a.FooterLinks__external {:href "https://x.com/c4605" :target "_blank" :rel "noopener"} "X"]
      [:span.FooterLinks__sep "·"]
-     [:a.FooterLinks__external {:href rss-url :target "_blank" :rel "noopener"} "RSS"]]))
+     [:a.FooterLinks__external {:href (rss-url lang) :target "_blank" :rel "noopener"} "RSS"]]))
 
 (defn ThemeToggle
   "Render theme toggle button.
    For SSR, renders the initial state (system theme).
    For browser, the browser/theme.cljs component should be used instead.
-   Props: {:lang keyword :on-click fn :theme keyword :next-label string :current-label string}"
-  [{:keys [lang on-click next-label current-label]}]
+   Props: {:class string :lang keyword :on-click fn :theme keyword :next-label string :current-label string}"
+  [{:keys [class lang on-click next-label current-label]}]
   (let [next-label (or next-label (t lang :theme/switch-to-light))
         current-label (or current-label (t lang :theme/auto))]
     [:button.ThemeToggle (cond-> {:type "button"
+                                  :class (clsx
+                                          class
+                                          "fixed z-2"
+                                          "right-5 bottom-[80px]"
+                                          "sm:top-5 sm:bottom-auto sm:right-5")
                                   :aria-label next-label
                                   :on-click on-click}
                            current-label (assoc :title (t lang :theme/current current-label)))

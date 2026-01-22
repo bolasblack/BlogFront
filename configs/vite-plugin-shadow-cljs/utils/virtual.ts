@@ -1,3 +1,8 @@
+import type { ViteDevServer } from "vite";
+import { pDebounce } from "./pDebounce";
+import type { PluginContext } from "../types";
+import { isBrowserTarget } from "./shadowCljsConfig";
+
 const VIRTUAL_MODULE_PREFIX = "virtual:shadow-cljs/";
 
 export type ShadowCljsVirtualId = string & { __shadowCljsVirtualId: true };
@@ -20,3 +25,57 @@ export function parseBuildIdFromVirtualId(id: string): string | null {
   }
   return null;
 }
+
+/**
+ * Send HMR update for a build.
+ * Debounced to batch multiple file changes into a single HMR update.
+ *
+ * Note: Vite already invalidates the changed file and its importers chain
+ * before calling hotUpdate. We only need to send the HMR update.
+ */
+export const sendHmrUpdate = pDebounce(
+  (
+    calls: [
+      getCtx: () => PluginContext,
+      server: ViteDevServer,
+      buildId: string
+    ][]
+  ) => {
+    const [getCtx, server] = calls[calls.length - 1];
+    const ctx = getCtx();
+    const uniqueBuildIds = [...new Set(calls.map(([, , buildId]) => buildId))];
+
+    for (const buildId of uniqueBuildIds) {
+      const buildConfig = ctx.buildConfigs.get(buildId);
+      if (!buildConfig) continue;
+
+      // For browser targets, shadow-cljs handles HMR via its own WebSocket.
+      if (isBrowserTarget(buildConfig)) continue;
+
+      const virtualId = toResolvedVirtualId(buildId);
+      const timestamp = Date.now();
+
+      // Send HMR update to each environment that has this module
+      if (server.environments) {
+        for (const devEnv of Object.values(server.environments)) {
+          const virtualMod = devEnv.moduleGraph.getModuleById(virtualId);
+          if (!virtualMod) continue;
+
+          // Send HMR update - Vite already invalidated the changed files
+          devEnv.hot.send({
+            type: "update",
+            updates: [
+              {
+                type: "js-update" as const,
+                path: virtualMod.url,
+                acceptedPath: virtualMod.url,
+                timestamp,
+              },
+            ],
+          });
+        }
+      }
+    }
+  },
+  100
+);

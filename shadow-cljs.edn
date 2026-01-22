@@ -2,9 +2,9 @@
  :cache-root ".shadow-cljs"
  :builds {:browser {:target :esm
                     :js-options {:js-provider :import}
-                    :compiler-options {:optimizations :advanced
-                                       :source-map true
-                                       :output-feature-set :es-next}
+                    :compiler-options {:output-feature-set :es-next
+                                       :source-map true}
+                    :release {:compiler-options {:optimizations :advanced}}
                     :output-dir ".shadow-cljs/browser-out"
                     :asset-path "/assets/"
                     :modules {:main {:entries [browser.core]}}
@@ -12,9 +12,9 @@
           :worker {:target :esm
                    :runtime :custom
                    :js-options {:js-provider :import}
-                   :compiler-options {:optimizations :advanced
-                                      :source-map true
-                                      :output-feature-set :es-next}
+                   :compiler-options {:output-feature-set :es-next
+                                      :source-map true}
+                   :release {:compiler-options {:optimizations :advanced}}
                    :output-dir ".shadow-cljs/worker-out"
                    :modules {:worker {:entries [worker.core]
                                       :exports {default worker.core/default}}}

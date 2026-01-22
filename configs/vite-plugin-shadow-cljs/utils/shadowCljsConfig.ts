@@ -2,7 +2,7 @@ import { parseEDNString } from "edn-data";
 import * as fs from "fs/promises";
 import { resolve } from "path";
 import { DEFAULT_CONFIG_PATH } from "../constants";
-import type { BuildConfig } from "../types";
+import type { BuildConfig, BuildConfigMap } from "../types";
 
 function ednToJs(value: unknown): unknown {
   if (Array.isArray(value)) {
@@ -32,8 +32,16 @@ const getFieldOfMap = <T>(
 export async function loadBuildConfigs(
   configPath: string,
   buildIds: string[]
-): Promise<Map<string, BuildConfig>> {
+): Promise<BuildConfigMap> {
   const content = await fs.readFile(configPath, "utf-8");
+  return parseBuildConfigs(content, configPath, buildIds);
+}
+
+function parseBuildConfigs(
+  content: string,
+  configPath: string,
+  buildIds: string[]
+): BuildConfigMap {
   const parsed = parseEDNString(content, {
     keywordAs: "object",
     setAs: "array",
@@ -48,7 +56,7 @@ export async function loadBuildConfigs(
     throw new Error(`No :builds found in ${configPath}`);
   }
 
-  const result = new Map<string, BuildConfig>();
+  const result: BuildConfigMap = new Map();
 
   for (const buildId of buildIds) {
     const build = getFieldOfMap<[key: string, value: unknown][]>(

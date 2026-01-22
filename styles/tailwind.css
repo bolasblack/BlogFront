@@ -1,0 +1,9 @@
+@import "tailwindcss";
+@import "../node_modules/normalize.css/normalize";
+@import "./_variables.scss" layer(theme);
+
+@source "../index.html";
+@source "../cljs/**/*.cljs";
+
+@theme {
+}

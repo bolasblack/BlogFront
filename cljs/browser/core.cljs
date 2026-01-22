@@ -158,10 +158,6 @@
   (when-let [ssr-state (parse-ssr-state)]
     (reset! st/state ssr-state)))
 
-(defn unmount-root []
-  (when @react-root
-    (rdomc/unmount @react-root)))
-
 (defn mount-root []
   (let [app-el (js/document.getElementById "app")]
     (when-not @react-root

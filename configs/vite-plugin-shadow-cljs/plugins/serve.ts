@@ -1,15 +1,15 @@
 import { spawn } from "child_process";
-import type { PluginOption, ResolvedConfig } from "vite";
+import type { PluginOption, ResolvedConfig, ViteDevServer } from "vite";
 import { TAG } from "../constants";
+import type { PluginContext } from "../types";
+import { resolveConfigPath } from "../utils/shadowCljsConfig";
 import {
   getGlobalState,
   handleShadowProcessOutputs,
   setGlobalShadowProcess,
   stopGlobalShadowProcess,
 } from "../utils/shadowCljsProcess";
-import type { PluginContext } from "../types";
 import { waitForProcessSpawn } from "../utils/waitForProcessSpawn";
-import { toResolvedVirtualId } from "../utils/virtual";
 
 export function createServePlugin(
   initContext: (config: ResolvedConfig) => Promise<void>,
@@ -22,12 +22,14 @@ export function createServePlugin(
     apply: "serve",
 
     async configureServer(server) {
-      const { projectRoot } = getContext();
+      const { projectRoot, configPath } = getContext();
+
+      autoRestartViteWhenShadowCljsFileChanged(server, configPath);
 
       const shadowProcess = getGlobalState()?.process;
       if (shadowProcess) {
         console.log(`${TAG} Using existing shadow-cljs process...`);
-        handleShadowProcessOutputs(shadowProcess);
+        // HMR is handled by file watcher in virtualModule.ts
         return;
       }
 
@@ -46,21 +48,48 @@ export function createServePlugin(
       }
 
       setGlobalShadowProcess(newShadowProcess);
-      handleShadowProcessOutputs(newShadowProcess);
+      const unlistenShadowProcessOutputs =
+        handleShadowProcessOutputs(newShadowProcess);
 
-      const unlisten = getGlobalState()!.onBuildComplete((buildId) => {
-        const mod = server.moduleGraph.getModuleById(
-          toResolvedVirtualId(buildId)
-        );
-        if (mod) {
-          server.moduleGraph.invalidateModule(mod);
-        }
-      });
-
-      process.once("exit", () => {
+      const cleanup = () => {
         stopGlobalShadowProcess();
-        unlisten();
-      });
+        unlistenShadowProcessOutputs();
+      };
+
+      server.httpServer?.once("close", cleanup);
+      process.once("exit", cleanup);
     },
   };
+}
+
+function autoRestartViteWhenShadowCljsFileChanged(
+  server: ViteDevServer,
+  configPathOption: string
+) {
+  const configPath = resolveConfigPath(
+    server.config.root ?? process.cwd(),
+    configPathOption
+  );
+
+  // Watch shadow-cljs config file for changes - restart Vite on config change
+  let restartPromise: Promise<void> | null = null;
+  const handleConfigChange = (file: string) => {
+    if (file !== configPath) return;
+    if (restartPromise) return;
+    restartPromise = server
+      .restart(true)
+      .catch((error) => {
+        console.warn(`${TAG} Failed to restart Vite server:`, error);
+      })
+      .finally(() => {
+        restartPromise = null;
+      });
+  };
+
+  server.watcher.add(configPath);
+  server.watcher.on("change", handleConfigChange);
+
+  server.httpServer?.once("close", () => {
+    server.watcher.off("change", handleConfigChange);
+  });
 }

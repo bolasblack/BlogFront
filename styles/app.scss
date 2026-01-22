@@ -1,6 +1,6 @@
 @use "sass:color";
-@use "../node_modules/normalize.css/normalize";
-@use "./breakpoints" as *;
+@use "./utils" as *;
+@use "./variables" as *;
 
 // ============================================================================
 // Design Tokens - CSS Variables
@@ -158,10 +158,6 @@ a {
 // ============================================================================
 
 .ThemeToggle {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 100;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -185,9 +181,6 @@ a {
   }
 
   @include breakpoint-down($breakpoint-sm) {
-    top: auto;
-    bottom: 80px;
-    right: 20px;
     padding: 10px;
 
     &__label {
@@ -620,29 +613,17 @@ a {
 
 .FooterLinks {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   font-size: 0.8125rem;
   letter-spacing: 0.02em;
   color: var(--color-text-muted);
-  z-index: 99;
   transition: color var(--theme-transition);
-
-  &.top-right {
-    position: fixed;
-    top: 24px;
-    right: 108px;
-
-    @include breakpoint-down($breakpoint-sm) {
-      position: static;
-      justify-content: center;
-      margin: 24px auto 12px;
-    }
-  }
 
   &.bottom-center {
     position: fixed;
-    bottom: 24px;
+    bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
   }
