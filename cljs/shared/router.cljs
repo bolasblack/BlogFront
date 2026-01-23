@@ -61,15 +61,18 @@
     (cond
       ;; Goto article route: /goto/articles/{mdUrl}
       (str/starts-with? clean-path "goto/articles/")
-      {:type :goto-article
-       :lang lang
-       :md-url (js/decodeURIComponent (subs clean-path 15))}
+      (let [md-url (js/decodeURIComponent (str/replace-first clean-path "goto/articles/" ""))
+            ;; Determine language from md-url suffix: .en.md -> :en, .md -> :zh
+            md-lang (if (str/ends-with? md-url ".en.md") :en :zh)]
+        {:type :goto-article
+         :lang md-lang
+         :md-url md-url})
 
       ;; Tag route: /tag/tag-name
       (str/starts-with? clean-path "tag/")
       {:type :tag
        :lang lang
-       :id (js/decodeURIComponent (subs clean-path 4))}
+       :id (js/decodeURIComponent (str/replace-first clean-path "tag/" ""))}
 
       ;; Post route: /post-id with optional #heading
       (nil? (m/explain gh/PostId (js/decodeURIComponent clean-path)))
